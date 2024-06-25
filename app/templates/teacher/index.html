@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+
+{% block title %}Professor{% endblock %}
+
+{% block content %}
+<h1>Bem-vindo(a) Professor(a) {{username}}</h1>
+<ul>
+    <li><a href="{{ url_for('teacher.register_occurrence') }}">Registrar Ocorrência</a></li>
+</ul>
+<!-- Conteúdo específico para a página de gestão -->
+{% endblock %}

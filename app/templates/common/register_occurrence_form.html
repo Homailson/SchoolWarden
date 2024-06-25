@@ -1,0 +1,51 @@
+<div>
+    {{ form.teacher.label }}<br>
+    {{ form.teacher() }}<br>
+    {% for error in form.teacher.errors %}
+    <span style="color: red;">{{ error }}</span>
+    {% endfor %}
+</div>
+<div>
+    <label for="student-search">Aluno</label><br>
+    <select id="student-search" class="js-example-responsive select2" style="width: 20%;">
+        <option value="" selected>pesquisar</option>
+        {% for student_id, student_name in form.student.choices %}
+        <option value="{{ student_id }}">{{ student_name }}</option>
+        {% endfor %}
+    </select><br>
+    {% for error in form.student.errors %}
+    <span style="color: red;">{{ error }}</span>
+    {% endfor %}
+</div>
+<input type="hidden" name="student" id="student" value="{{ form.student.data }}">
+<div>
+    {{ form.classe.label }}<br>
+    {{ form.classe() }}<br>
+    {% for error in form.classe.errors %}
+    <span style="color: red;">{{ error }}</span>
+    {% endfor %}
+</div>
+<div>
+    {{ form.subject.label }}<br>
+    {{ form.subject() }}<br>
+    {% for error in form.subject.errors %}
+    <span style="color: red;">{{ error }}</span>
+    {% endfor %}
+</div>
+<div>
+    {{ form.description.label }}<br>
+    {{ form.description() }}<br>
+    {% for error in form.description.errors %}
+    <span style="color: red;">{{ error }}</span>
+    {% endfor %}
+</div>
+<div>
+    {{ form.submit() }}
+</div>
+
+<!-- Carregando script necessário para traduzir o texto do select2 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/i18n/pt-BR.js"></script>
+<script>
+    window.STUDENT_SEARCH_URL = "{{ url_for(session.role + '.search_students_route') }}";
+</script>
+<script src="{{ url_for('static', filename='js/select2.js') }}"></script>
