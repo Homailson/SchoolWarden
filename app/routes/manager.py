@@ -5,6 +5,8 @@ from app.forms import SubjectForm
 from app.forms import StudentForm
 from app.forms import TeacherForm
 from flask_pymongo import PyMongo
+from bson import ObjectId
+from datetime import datetime
 from app.utils.common import occurrence_submission, search_students
 import bcrypt
 
@@ -68,9 +70,6 @@ def register_student():
     classes = [(str(cls['_id']), cls['classe'])
                for cls in mongo.db.classes.find()]
     form.update_classes(classes)
-    # classes = [classe['classe']
-    #            for classe in mongo.db.classes.find()]
-    # form.update_classes(classes)
 
     if form.validate_on_submit():
         username = form.username.data
@@ -146,3 +145,105 @@ def register_occurrence():
 @manager_required
 def search_students_route():
     return search_students()
+
+
+def get_users_by_id(ids):
+    users = []
+    mongo = PyMongo(current_app)
+    for user_id in ids:
+        user = mongo.db.users.find_one({"_id": ObjectId(user_id)})
+        users.append(user)
+    return users
+
+
+@manager_bp.route('/manager_occurrence')
+def manager_occurrence():
+    mongo = PyMongo(current_app)
+    occurrences = list(mongo.db.occurrences.find().sort("date", -1).limit(100))
+    teachers_ids = [occurrence['teacher_id'] for occurrence in occurrences]
+    students_ids = [occurrence['student_id'] for occurrence in occurrences]
+    teachers = get_users_by_id(teachers_ids)
+    students = get_users_by_id(students_ids)
+
+    occurrences_data = []
+    for i, occurrence in enumerate(occurrences):
+        occurrence_data = {
+            'id': str(occurrence['_id']),
+            'teacher': teachers[i]['username'],
+            'student': students[i]['username'],
+            'description': occurrence['description'],
+            'date': occurrence['date'].strftime('%d/%m/%Y')
+        }
+        occurrences_data.append(occurrence_data)
+
+    return render_template('manager/manager_occurrence.html', occurrences_data=occurrences_data)
+
+
+@manager_bp.route('/manager_occurrence/search')
+def search_occurrences():
+    query = request.args.get('query', '').strip()
+    start_date = request.args.get('start_date', '').strip()
+    end_date = request.args.get('end_date', '').strip()
+    page = int(request.args.get('page', 1))
+    per_page = 20
+    skip = (page - 1) * per_page
+
+    search_filter = {}
+    if query:
+        mongo = PyMongo(current_app)
+
+        # Busca pelos IDs dos usuários com base no username
+        users = list(mongo.db.users.find(
+            {'username': {'$regex': query, '$options': 'i'}}))
+        users_ids = [str(usr['_id']) for usr in users]
+
+        search_filter = {
+            '$or': [
+                {'description': {'$regex': query, '$options': 'i'}},
+                {'teacher_id': {'$in': users_ids}},
+                {'student_id': {'$in': users_ids}}
+            ]
+        }
+
+    # Adicionando filtro por período (data)
+    if start_date and end_date:
+        search_filter['date'] = {
+            '$gte': datetime.strptime(start_date, '%Y-%m-%d'),
+            '$lte': datetime.strptime(end_date, '%Y-%m-%d')
+        }
+
+    mongo = PyMongo(current_app)
+    total_occurrences = mongo.db.occurrences.count_documents(search_filter)
+    occurrences = list(mongo.db.occurrences.find(
+        search_filter).sort("date", -1).skip(skip).limit(per_page))
+
+    teachers_ids = [occurrence['teacher_id'] for occurrence in occurrences]
+    students_ids = [occurrence['student_id'] for occurrence in occurrences]
+    teachers = get_users_by_id(teachers_ids)
+    students = get_users_by_id(students_ids)
+
+    occurrences_data = []
+    for i, occurrence in enumerate(occurrences):
+        occurrence_data = {
+            'id': str(occurrence['_id']),
+            'teacher': teachers[i]['username'],
+            'student': students[i]['username'],
+            'description': occurrence['description'],
+            'date': occurrence['date'].strftime('%d/%m/%Y')
+        }
+        occurrences_data.append(occurrence_data)
+
+    total_pages = (total_occurrences + per_page - 1) // per_page
+
+    return jsonify({
+        'occurrences': occurrences_data,
+        'current_page': page,
+        'total_pages': total_pages
+    })
+
+
+@manager_bp.route('/manager_occurrence/delete/<id>', methods=['POST'])
+def delete_occurrence(id):
+    mongo = PyMongo(current_app)
+    result = mongo.db.occurrences.delete_one({'_id': ObjectId(id)})
+    return jsonify({'success': result.deleted_count == 1})

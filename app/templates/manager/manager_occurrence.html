@@ -1,0 +1,122 @@
+{% extends "layout.html" %}
+
+{% block title %}Gerir Ocorrências{% endblock %}
+
+{% block content %}
+
+<div class="container">
+    <h1>Gerir Ocorrências</h1>
+    <input type="text" id="searchInput" placeholder="Pesquisar por aluno, professor, turma ou data"
+        onkeyup="fetchOccurrences()">
+    <input type="date" id="start_date" onchange="fetchOccurrences()">
+    <input type="date" id="end_date" onchange="fetchOccurrences()">
+    <button onclick="clearFilters()">Limpar Filtro</button>
+
+    <table id="ocorrenciasTable">
+        <thead>
+            <tr>
+                <th>Nome do Aluno</th>
+                <th>Nome do Professor</th>
+                <th>Data da Ocorrência</th>
+                <th>Descrição</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for occurrence in occurrences_data %}
+            <tr>
+                <td>{{ occurrence.student }}</td>
+                <td>{{ occurrence.teacher }}</td>
+                <td>{{ occurrence.date }}</td>
+                <td>{{ occurrence.description }}</td>
+                <td>
+                    <button onclick="viewDescription('{{ occurrence.description }}')">Visualizar</button>
+                    <button>Editar</button>
+                    <button onclick="deleteOccurrence('{{ occurrence.id }}')">Excluir</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div id="pagination">
+        <button onclick="prevPage()">Anterior</button>
+        <span id="pageInfo"></span>
+        <button onclick="nextPage()">Próxima</button>
+    </div>
+</div>
+
+<script>
+    let currentPage = 1;
+    const perPage = 20;
+
+    document.addEventListener('DOMContentLoaded', (event) => {
+        fetchOccurrences();
+    });
+
+    function fetchOccurrences() {
+        const searchInput = document.getElementById('searchInput');
+        const query = searchInput ? searchInput.value : '';
+        const startDate = document.getElementById('start_date').value;
+        const endDate = document.getElementById('end_date').value;
+
+        fetch(`/manager/manager_occurrence/search?query=${query}&start_date=${startDate}&end_date=${endDate}&page=${currentPage}`)
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.getElementById('ocorrenciasTable').querySelector('tbody');
+                tableBody.innerHTML = '';
+
+                data.occurrences.forEach(occurrence => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${occurrence.student}</td>
+                        <td>${occurrence.teacher}</td>
+                        <td>${occurrence.date}</td>
+                        <td>${occurrence.description}</td>
+                        <td>
+                            <button onclick="viewDescription('${occurrence.description}')">Visualizar</button>
+                            <button>Editar</button>
+                            <button onclick="deleteOccurrence('${occurrence.id}')">Excluir</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+                document.getElementById('pageInfo').innerText = `Página ${data.current_page} de ${data.total_pages}`;
+            });
+    }
+
+    function deleteOccurrence(id) {
+        fetch(`/manager/manager_occurrence/delete/${id}`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    fetchOccurrences();
+                }
+            });
+    }
+
+    function prevPage() {
+        if (currentPage > 1) {
+            currentPage--;
+            fetchOccurrences();
+        }
+    }
+
+    function nextPage() {
+        currentPage++;
+        fetchOccurrences();
+    }
+
+    function viewDescription(description) {
+        alert(description);
+    }
+
+    function clearFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('start_date').value = '';
+        document.getElementById('end_date').value = '';
+        fetchOccurrences();
+    }
+</script>
+{% endblock %}
