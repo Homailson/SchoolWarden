@@ -185,7 +185,7 @@ def search_occurrences():
     start_date = request.args.get('start_date', '').strip()
     end_date = request.args.get('end_date', '').strip()
     page = int(request.args.get('page', 1))
-    per_page = 20
+    per_page = 15
     skip = (page - 1) * per_page
 
     search_filter = {}
@@ -242,8 +242,9 @@ def search_occurrences():
     })
 
 
-@manager_bp.route('/manager_occurrence/delete/<id>', methods=['POST'])
+@manager_bp.route('/manager_occurrence/delete/<string:id>', methods=['POST'])
 def delete_occurrence(id):
+    print(id)
     mongo = PyMongo(current_app)
     result = mongo.db.occurrences.delete_one({'_id': ObjectId(id)})
     return jsonify({'success': result.deleted_count == 1})
