@@ -1,12 +1,10 @@
-{% extends "layout.html" %}
-
 {% block title %}Gerir Ocorrências{% endblock %}
 
 {% block content %}
 
 <div class="container">
     <h1>Gerir Ocorrências</h1>
-    <input type="text" id="searchInput" placeholder="Pesquisar por aluno, professor, turma ou data"
+    <input type="text" id="searchInput" placeholder="Pesquisar por aluno, professor ou assunto"
         onkeyup="fetchOccurrences()">
     <input type="date" id="start_date" onchange="fetchOccurrences()">
     <input type="date" id="end_date" onchange="fetchOccurrences()">
@@ -18,24 +16,14 @@
                 <th>Nome do Aluno</th>
                 <th>Nome do Professor</th>
                 <th>Data da Ocorrência</th>
+                <th>Tipo</th>
+                <th>Status</th>
                 <th>Descrição</th>
                 <th>Ações</th>
             </tr>
         </thead>
         <tbody>
-            {% for occurrence in occurrences_data %}
-            <tr>
-                <td>{{ occurrence.student }}</td>
-                <td>{{ occurrence.teacher }}</td>
-                <td>{{ occurrence.date }}</td>
-                <td>{{ occurrence.description }}</td>
-                <td>
-                    <button onclick="viewDescription('{{ occurrence.description }}')">Visualizar</button>
-                    <button>Editar</button>
-                    <button onclick="deleteOccurrence('{{ occurrence.id }}')">Excluir</button>
-                </td>
-            </tr>
-            {% endfor %}
+            <!-- O conteúdo é preenchido pela função JS -->
         </tbody>
     </table>
 
@@ -46,52 +34,133 @@
     </div>
 </div>
 
+<!-- Modal Genérico para Descrição e Solução -->
+<div id="contentModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('contentModal')">&times;</span>
+        <h2 id="modalContentTitle"></h2>
+        <div id="modalContentView">
+            <p id="modalContentText"></p>
+            <button onclick="editContent('contentModal')">Editar</button>
+            <button onclick="closeModal('contentModal')">Fechar</button>
+        </div>
+        <div id="modalContentEdit" style="display:none;">
+            <textarea id="modalContentTextarea" rows="4" cols="50"></textarea>
+            <button onclick="saveContent('contentModal', '{{ csrf_token() }}')">Salvar</button>
+            <button onclick="cancelEdit('contentModal')">Cancelar</button>
+        </div>
+    </div>
+</div>
+
 <script>
     let currentPage = 1;
+    let currentOccurrenceId = null;
+    let currentContentType = null;
 
-    document.addEventListener('DOMContentLoaded', (event) => {
-        fetchOccurrences();
-    });
+    document.addEventListener('DOMContentLoaded', fetchOccurrences);
 
     function fetchOccurrences() {
-        const searchInput = document.getElementById('searchInput');
-        const query = searchInput ? searchInput.value : '';
+        const query = document.getElementById('searchInput').value;
         const startDate = document.getElementById('start_date').value;
         const endDate = document.getElementById('end_date').value;
 
         fetch(`/manager/manager_occurrence/search?query=${query}&start_date=${startDate}&end_date=${endDate}&page=${currentPage}`)
             .then(response => response.json())
             .then(data => {
-                const tableBody = document.getElementById('ocorrenciasTable').querySelector('tbody');
-                tableBody.innerHTML = '';
-
-                data.occurrences.forEach(occurrence => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
+                const tableBody = document.querySelector('#ocorrenciasTable tbody');
+                tableBody.innerHTML = data.occurrences.map(occurrence =>
+                    `<tr>
                         <td>${occurrence.student}</td>
                         <td>${occurrence.teacher}</td>
                         <td>${occurrence.date}</td>
-                        <td>${occurrence.description}</td>
+                        <td>${occurrence.classification}</td>
+                        <td>${occurrence.status}</td>
+                        <td>${occurrence.description.substring(0, 50)}${occurrence.description.length > 50 ? '...' : ''}</td>
                         <td>
-                            <button onclick="viewDescription('${occurrence.description}')">Visualizar</button>
-                            <button>Editar</button>
-                            <button onclick="deleteOccurrence('${occurrence.id}')">Excluir</button>
+                            <button onclick="viewContent('description', '${occurrence.id}', '${occurrence.description}')">Descrição</button>
+                            <button onclick="viewContent('solution', '${occurrence.id}', '${occurrence.solution}')">Solução</button>
+                            <button onclick="confirmDelete('${occurrence.id}', '{{ csrf_token() }}')">Excluir</button>
                         </td>
-                    `;
-                    tableBody.appendChild(row);
-                });
+                    </tr>`
+                ).join('');
 
                 document.getElementById('pageInfo').innerText = `Página ${data.current_page} de ${data.total_pages}`;
             });
     }
 
-    function deleteOccurrence(id) {
-        fetch(`/manager/manager_occurrence/delete/${id}`, { method: 'POST' })
-            .then(response => response.json())
+    function viewContent(type, id, content) {
+        currentOccurrenceId = id;
+        currentContentType = type;
+        document.getElementById('modalContentText').innerText = content;
+        document.getElementById('modalContentTextarea').value = content;
+        document.getElementById('modalContentTitle').innerText = `${type.charAt(0).toUpperCase() + type.slice(1)} da Ocorrência`;
+        document.getElementById('modalContentView').style.display = 'block';
+        document.getElementById('modalContentEdit').style.display = 'none';
+        document.getElementById('contentModal').style.display = 'block';
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    function editContent(modalId) {
+        document.getElementById('modalContentView').style.display = 'none';
+        document.getElementById('modalContentEdit').style.display = 'block';
+    }
+
+    function cancelEdit(modalId) {
+        document.getElementById('modalContentView').style.display = 'block';
+        document.getElementById('modalContentEdit').style.display = 'none';
+    }
+
+    function saveContent(modalId, csrf) {
+        const newContent = document.getElementById('modalContentTextarea').value;
+        const endpoint = `/manager/manager_occurrence/update/${currentContentType}/${currentOccurrenceId}`;
+
+        fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrf
+            },
+            body: JSON.stringify({ [currentContentType]: newContent })
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
+                    closeModal(modalId);
                     fetchOccurrences();
+                } else {
+                    alert(`Erro ao salvar a ${currentContentType}`);
                 }
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+            });
+    }
+
+    function confirmDelete(id, csrf) {
+        if (confirm("Tem certeza que deseja excluir esta ocorrência?")) {
+            deleteOccurrence(id, csrf);
+        }
+    }
+
+    function deleteOccurrence(id, csrf) {
+        fetch(`/manager/manager_occurrence/delete/${id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrf
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) fetchOccurrences();
             });
     }
 
@@ -107,10 +176,6 @@
         fetchOccurrences();
     }
 
-    function viewDescription(description) {
-        alert(description);
-    }
-
     function clearFilters() {
         document.getElementById('searchInput').value = '';
         document.getElementById('start_date').value = '';
@@ -118,4 +183,44 @@
         fetchOccurrences();
     }
 </script>
+
+<style>
+    /* Estilos para o modal */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgb(0, 0, 0);
+        background-color: rgba(0, 0, 0, 0.4);
+        padding-top: 60px;
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 5% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+    }
+
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+</style>
+
 {% endblock %}

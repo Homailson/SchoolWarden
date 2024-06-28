@@ -33,6 +33,13 @@
     {% endfor %}
 </div>
 <div>
+    {{ form.classification.label }}<br>
+    {{ form.classification() }}<br>
+    {% for error in form.classification.errors %}
+    <span style="color: red;">{{ error }}</span>
+    {% endfor %}
+</div>
+<div>
     {{ form.description.label }}<br>
     {{ form.description() }}<br>
     {% for error in form.description.errors %}

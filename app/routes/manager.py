@@ -228,7 +228,10 @@ def search_occurrences():
             'id': str(occurrence['_id']),
             'teacher': teachers[i]['username'],
             'student': students[i]['username'],
+            'classification': occurrence['classification'],
+            'status': occurrence['status'],
             'description': occurrence['description'],
+            'solution': occurrence['solution'],
             'date': occurrence['date'].strftime('%d/%m/%Y')
         }
         occurrences_data.append(occurrence_data)
@@ -244,7 +247,25 @@ def search_occurrences():
 
 @manager_bp.route('/manager_occurrence/delete/<string:id>', methods=['POST'])
 def delete_occurrence(id):
-    print(id)
     mongo = PyMongo(current_app)
     result = mongo.db.occurrences.delete_one({'_id': ObjectId(id)})
     return jsonify({'success': result.deleted_count == 1})
+
+
+@manager_bp.route('/manager_occurrence/update/<string:field>/<string:occurrence_id>', methods=['POST'])
+def update_occurrence_field(field, occurrence_id):
+    mongo = PyMongo(current_app)
+    data = request.json
+    value = data.get(field)
+    if not value:
+        return jsonify(success=False, message=f"{field} not provided")
+
+    occurrence = mongo.db.occurrences.find_one(
+        {'_id': ObjectId(occurrence_id)})
+    if occurrence:
+        mongo.db.occurrences.update_one(
+            {'_id': ObjectId(occurrence_id)},
+            {'$set': {field: value}}
+        )
+        return jsonify(success=True)
+    return jsonify(success=False)

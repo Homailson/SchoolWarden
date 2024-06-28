@@ -43,6 +43,7 @@ def occurrence_submission(role):
         student_id = form.student.data
         class_id = form.classe.data
         subject_id = form.subject.data
+        classification = form.classification.data
         description = form.description.data
 
         print("ID do estudante: ", student_id)
@@ -56,7 +57,10 @@ def occurrence_submission(role):
             'student_id': student_id,
             'class_id': class_id,
             'subject_id': subject_id,
+            'classification': classification,
             'description': description,
+            'status': "pendente",
+            'solution': "sem solução",
             'date': datetime.now(timezone.utc)
         })
         flash('Ocorrência cadastrada com sucesso!', 'success')

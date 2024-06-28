@@ -160,6 +160,26 @@ class OccurrenceForm(FlaskForm):
     classe = SelectField('Turma', choices=[], validators=[DataRequired()])
     subject = SelectField('Disciplina', choices=[],
                           validators=[DataRequired()])
+    classification = SelectField(
+        'Tipo',
+        choices=[('Bullying', 'Bullying'),
+                 ('CyberBullying', 'CyberBullying'),
+                 ('Agressão física', 'Agressão física'),
+                 ('Agressão verbal', 'Agressão verbal'),
+                 ('Uso não autorizado de celular',
+                  'Uso não autorizado de celular'),
+                 ('Desrrespeito a funcionário', 'Desrrespeito a funcionário'),
+                 ('Trapaça em prova', 'Trapaça em prova'),
+                 ('Vandalismo', 'Vandalismo'),
+                 ('Fuga da escola', 'Fuga da escola'),
+                 ('Furto', 'Furto'),
+                 ('Uso de substância ilícita', 'Uso de substância ilícita'),
+                 ('Porte de arma', 'Porte de arma'),
+                 ('Assédio', 'Assédio'),
+                 ('Automutilacão', 'Automutilacão')
+                 ],
+        validators=[DataRequired()]
+    )
     description = TextAreaField('Descrição', validators=[DataRequired()])
     submit = SubmitField('Cadastrar')
 
