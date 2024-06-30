@@ -30,7 +30,8 @@ def register_class():
 
         # Inserir a nova turma no banco de dados
         mongo.db.classes.insert_one({
-            'classe': classe
+            'classe': classe,
+            'occurrences': []
         })
         flash('Turma cadastrada com sucesso!', 'success')
         return redirect(url_for('manager.index'))
@@ -48,7 +49,8 @@ def register_subject():
 
         # Inserir a nova turma no banco de dados
         mongo.db.subjects.insert_one({
-            'subject': subject
+            'subject': subject,
+            'occurrences': []
         })
         flash('Disciplina cadastrada com sucesso!', 'success')
         return redirect(url_for('manager.index'))
@@ -84,7 +86,8 @@ def register_student():
             'username': username,
             'password': hashed_password.decode('utf-8'),
             'classe': classe,
-            'role': 'student'
+            'role': 'student',
+            'occurrences': []
         })
         flash('Estudante cadastrado com sucesso!', 'success')
         return redirect(url_for('manager.index'))
@@ -127,7 +130,8 @@ def register_teacher():
             'password': hashed_password.decode('utf-8'),
             'subjects': subjects,
             'classes': classes,
-            'role': 'teacher'
+            'role': 'teacher',
+            'occurrences': []
         })
         flash('Professor(a) cadastrado com sucesso!', 'success')
         return redirect(url_for('manager.index'))
@@ -189,6 +193,7 @@ def search_occurrences():
     skip = (page - 1) * per_page
 
     search_filter = {}
+
     if query:
         mongo = PyMongo(current_app)
 
@@ -200,6 +205,7 @@ def search_occurrences():
         search_filter = {
             '$or': [
                 {'description': {'$regex': query, '$options': 'i'}},
+                {'classification': {'$regex': query, '$options': 'i'}},
                 {'teacher_id': {'$in': users_ids}},
                 {'student_id': {'$in': users_ids}}
             ]
@@ -211,6 +217,11 @@ def search_occurrences():
             '$gte': datetime.strptime(start_date, '%Y-%m-%d'),
             '$lte': datetime.strptime(end_date, '%Y-%m-%d')
         }
+
+    # Adicionando filtro por status pendente (se aplicável)
+    status = request.args.get('status')  # Obtém o parâmetro de status
+    if status == 'pending':
+        search_filter['status'] = 'pendente'
 
     mongo = PyMongo(current_app)
     total_occurrences = mongo.db.occurrences.count_documents(search_filter)
@@ -248,8 +259,30 @@ def search_occurrences():
 @manager_bp.route('/manager_occurrence/delete/<string:id>', methods=['POST'])
 def delete_occurrence(id):
     mongo = PyMongo(current_app)
+
+    # Delete the occurrence from the occurrences collection
     result = mongo.db.occurrences.delete_one({'_id': ObjectId(id)})
-    return jsonify({'success': result.deleted_count == 1})
+
+    if result.deleted_count == 1:
+        # Remove the occurrence ID from the occurrences field in other collections
+        mongo.db.subjects.update_one(
+            {"occurrences": ObjectId(id)},
+            {"$pull": {"occurrences": ObjectId(id)}}
+        )
+
+        mongo.db.users.update_one(
+            {"occurrences": ObjectId(id)},
+            {"$pull": {"occurrences": ObjectId(id)}}
+        )
+
+        mongo.db.classes.update_one(
+            {"occurrences": ObjectId(id)},
+            {"$pull": {"occurrences": ObjectId(id)}}
+        )
+
+        return jsonify({'success': True, 'message': 'Occurrence deleted successfully.'})
+    else:
+        return jsonify({'success': False, 'message': 'Occurrence not found.'}), 404
 
 
 @manager_bp.route('/manager_occurrence/update/<string:field>/<string:occurrence_id>', methods=['POST'])
@@ -263,9 +296,25 @@ def update_occurrence_field(field, occurrence_id):
     occurrence = mongo.db.occurrences.find_one(
         {'_id': ObjectId(occurrence_id)})
     if occurrence:
-        mongo.db.occurrences.update_one(
-            {'_id': ObjectId(occurrence_id)},
-            {'$set': {field: value}}
-        )
+        if field == "solution":
+            if value == "sem solução":
+                mongo.db.occurrences.update_one(
+                    {'_id': ObjectId(occurrence_id)},
+                    {'$set': {'status': "pendente"}}
+                )
+            else:
+                mongo.db.occurrences.update_one(
+                    {'_id': ObjectId(occurrence_id)},
+                    {'$set': {"status": "resolvido"}}
+                )
+                mongo.db.occurrences.update_one(
+                    {'_id': ObjectId(occurrence_id)},
+                    {'$set': {field: value}}
+                )
+        else:
+            mongo.db.occurrences.update_one(
+                {'_id': ObjectId(occurrence_id)},
+                {'$set': {field: value}}
+            )
         return jsonify(success=True)
     return jsonify(success=False)

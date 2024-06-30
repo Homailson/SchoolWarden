@@ -1,13 +1,18 @@
+{% extends "layout.html" %}
 {% block title %}Gerir Ocorrências{% endblock %}
 
 {% block content %}
 
 <div class="container">
     <h1>Gerir Ocorrências</h1>
-    <input type="text" id="searchInput" placeholder="Pesquisar por aluno, professor ou assunto"
+    <input type="text" id="searchInput" placeholder="Pesquisar por aluno, professor, assunto ou tipo"
         onkeyup="fetchOccurrences()">
     <input type="date" id="start_date" onchange="fetchOccurrences()">
     <input type="date" id="end_date" onchange="fetchOccurrences()">
+    <select id="filterStatus" onchange="fetchOccurrences()">
+        <option value="all">Todas as Ocorrências</option>
+        <option value="pending">Ocorrências Pendentes</option>
+    </select>
     <button onclick="clearFilters()">Limpar Filtro</button>
 
     <table id="ocorrenciasTable">
@@ -63,26 +68,35 @@
         const query = document.getElementById('searchInput').value;
         const startDate = document.getElementById('start_date').value;
         const endDate = document.getElementById('end_date').value;
+        const status = document.getElementById('filterStatus').value;
 
-        fetch(`/manager/manager_occurrence/search?query=${query}&start_date=${startDate}&end_date=${endDate}&page=${currentPage}`)
+        let url = `/manager/manager_occurrence/search?query=${query}&start_date=${startDate}&end_date=${endDate}&page=${currentPage}`;
+
+        if (status !== 'all') {
+            url += `&status=${status}`;
+        }
+
+        fetch(url)
             .then(response => response.json())
             .then(data => {
                 const tableBody = document.querySelector('#ocorrenciasTable tbody');
-                tableBody.innerHTML = data.occurrences.map(occurrence =>
-                    `<tr>
-                        <td>${occurrence.student}</td>
-                        <td>${occurrence.teacher}</td>
-                        <td>${occurrence.date}</td>
-                        <td>${occurrence.classification}</td>
-                        <td>${occurrence.status}</td>
-                        <td>${occurrence.description.substring(0, 50)}${occurrence.description.length > 50 ? '...' : ''}</td>
-                        <td>
-                            <button onclick="viewContent('description', '${occurrence.id}', '${occurrence.description}')">Descrição</button>
-                            <button onclick="viewContent('solution', '${occurrence.id}', '${occurrence.solution}')">Solução</button>
-                            <button onclick="confirmDelete('${occurrence.id}', '{{ csrf_token() }}')">Excluir</button>
-                        </td>
-                    </tr>`
-                ).join('');
+                tableBody.innerHTML = data.occurrences.map(occurrence => {
+                    const statusClass = occurrence.status === 'pendente' ? 'status-pending' : 'status-resolved';
+                    return `
+                        <tr>
+                            <td>${occurrence.student}</td>
+                            <td>${occurrence.teacher}</td>
+                            <td>${occurrence.date}</td>
+                            <td>${occurrence.classification}</td>
+                            <td><span class="${statusClass}"></span></td>
+                            <td>${occurrence.description.substring(0, 50)}${occurrence.description.length > 50 ? '...' : ''}</td>
+                            <td>
+                                <button onclick="viewContent('description', '${occurrence.id}', '${occurrence.description}')">Descrição</button>
+                                <button onclick="viewContent('solution', '${occurrence.id}', '${occurrence.solution}')">Solução</button>
+                                <button onclick="confirmDelete('${occurrence.id}', '{{ csrf_token() }}')">Excluir</button>
+                            </td>
+                        </tr>`;
+                }).join('');
 
                 document.getElementById('pageInfo').innerText = `Página ${data.current_page} de ${data.total_pages}`;
             });
@@ -180,6 +194,7 @@
         document.getElementById('searchInput').value = '';
         document.getElementById('start_date').value = '';
         document.getElementById('end_date').value = '';
+        document.getElementById('filterStatus').value = 'all';
         fetchOccurrences();
     }
 </script>
@@ -220,6 +235,25 @@
         color: black;
         text-decoration: none;
         cursor: pointer;
+    }
+
+    /* Estilos para os status */
+    .status-pending::before {
+        content: '';
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        background-color: red;
+        border-radius: 50%;
+    }
+
+    .status-resolved::before {
+        content: '';
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        background-color: green;
+        border-radius: 50%;
     }
 </style>
 

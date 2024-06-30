@@ -52,7 +52,7 @@ def occurrence_submission(role):
             flash('Por favor, selecione um aluno válido.', 'error')
             return render_template(f'{role}/register_occurrence.html', form=form)
 
-        mongo.db.occurrences.insert_one({
+        result = mongo.db.occurrences.insert_one({
             'teacher_id': teacher_id,
             'student_id': student_id,
             'class_id': class_id,
@@ -63,6 +63,29 @@ def occurrence_submission(role):
             'solution': "sem solução",
             'date': datetime.now(timezone.utc)
         })
+
+        occurrence_id = result.inserted_id
+
+        mongo.db.users.update_one(
+            {"_id": ObjectId(student_id)},
+            {"$push": {"occurrences": occurrence_id}}
+        )
+
+        mongo.db.users.update_one(
+            {"_id": ObjectId(teacher_id)},
+            {"$push": {"occurrences": occurrence_id}}
+        )
+
+        mongo.db.classes.update_one(
+            {"_id": ObjectId(class_id)},
+            {"$push": {"occurrences": occurrence_id}}
+        )
+
+        mongo.db.subjects.update_one(
+            {"_id": ObjectId(subject_id)},
+            {"$push": {"occurrences": occurrence_id}}
+        )
+
         flash('Ocorrência cadastrada com sucesso!', 'success')
         return redirect(url_for(f'{role}.index'))
 

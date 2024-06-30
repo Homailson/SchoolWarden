@@ -5,12 +5,12 @@
 {% block content %}
 <h1>Bem-vindo(a) à Gestão {{ username }} </h1>
 <ul>
-    <li><a href="{{ url_for('manager.register_class') }}">Cadastrar turma</a></li>
     <li><a href="{{ url_for('manager.register_subject') }}">Cadastrar disciplina</a></li>
-    <li><a href="{{ url_for('manager.register_student') }}">Cadastrar estudante</a></li>
+    <li><a href="{{ url_for('manager.register_class') }}">Cadastrar turma</a></li>
     <li><a href="{{ url_for('manager.register_teacher') }}">Cadastrar professor</a></li>
-    <li><a href="{{ url_for('manager.register_occurrence') }}">Registrar Ocorrência</a></li>
-    <li><a href="{{ url_for('manager.manager_occurrence') }}">Gerir Ocorrências</a></li>
+    <li><a href="{{ url_for('manager.register_student') }}">Cadastrar estudante</a></li>
+    <li><a href="{{ url_for('manager.register_occurrence') }}">Registrar ocorrência</a></li>
+    <li><a href="{{ url_for('manager.manager_occurrence') }}">Gerir ocorrências</a></li>
 </ul>
 <!-- Conteúdo específico para a página de gestão -->
 {% endblock %}

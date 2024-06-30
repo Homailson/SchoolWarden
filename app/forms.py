@@ -71,7 +71,8 @@ class SubjectForm(FlaskForm):
         ('Ciências&Tecnologia', 'Ciências&Tecnologia'),
         ('EducaçãoAlimentar', 'EducaçãoAlimentar'),
         ('Higiene&Saúde', 'Higiene&Saude'),
-        ('Ed.Física', 'Ed.Fisica')
+        ('Ed.Física', 'Ed.Fisica'),
+        ('Ens.Religioso', 'Ens.Religioso')
 
     ])
     submit = SubmitField('Cadastrar Disciplina')
@@ -164,6 +165,8 @@ class OccurrenceForm(FlaskForm):
         'Tipo',
         choices=[('Bullying', 'Bullying'),
                  ('CyberBullying', 'CyberBullying'),
+                 ('Atraso', 'Atraso'),
+                 ('Dormindo em sala', 'Domindo em sala'),
                  ('Agressão física', 'Agressão física'),
                  ('Agressão verbal', 'Agressão verbal'),
                  ('Uso não autorizado de celular',
