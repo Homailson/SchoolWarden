@@ -6,6 +6,7 @@
 <h1>Bem-vindo(a) Professor(a) {{username}}</h1>
 <ul>
     <li><a href="{{ url_for('teacher.register_occurrence') }}">Registrar Ocorrência</a></li>
+    <li><a href="{{ url_for('teacher.teacher_occurrence_route') }}">Gerir ocorrências</a></li>
 </ul>
 <!-- Conteúdo específico para a página de gestão -->
 {% endblock %}

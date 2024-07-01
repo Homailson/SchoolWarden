@@ -46,7 +46,7 @@
         <h2 id="modalContentTitle"></h2>
         <div id="modalContentView">
             <p id="modalContentText"></p>
-            <button onclick="editContent('contentModal')">Editar</button>
+            <button id="editButton" onclick="editContent('contentModal')">Editar</button>
             <button onclick="closeModal('contentModal')">Fechar</button>
         </div>
         <div id="modalContentEdit" style="display:none;">
@@ -61,6 +61,7 @@
     let currentPage = 1;
     let currentOccurrenceId = null;
     let currentContentType = null;
+    const userRole = '{{ user_role }}';  // Role do usuário passada para o JavaScript
 
     document.addEventListener('DOMContentLoaded', fetchOccurrences);
 
@@ -70,7 +71,7 @@
         const endDate = document.getElementById('end_date').value;
         const status = document.getElementById('filterStatus').value;
 
-        let url = `/manager/manager_occurrence/search?query=${query}&start_date=${startDate}&end_date=${endDate}&page=${currentPage}`;
+        let url = `/${userRole}/manager_occurrence/search?query=${query}&start_date=${startDate}&end_date=${endDate}&page=${currentPage}`;
 
         if (status !== 'all') {
             url += `&status=${status}`;
@@ -111,6 +112,13 @@
         document.getElementById('modalContentView').style.display = 'block';
         document.getElementById('modalContentEdit').style.display = 'none';
         document.getElementById('contentModal').style.display = 'block';
+
+        const editButton = document.getElementById('editButton');
+        if (userRole === 'manager' || (userRole === 'teacher' && type === 'description')) {
+            editButton.style.display = 'inline-block';
+        } else {
+            editButton.style.display = 'none';
+        }
     }
 
     function closeModal(modalId) {
@@ -129,7 +137,7 @@
 
     function saveContent(modalId, csrf) {
         const newContent = document.getElementById('modalContentTextarea').value;
-        const endpoint = `/manager/manager_occurrence/update/${currentContentType}/${currentOccurrenceId}`;
+        const endpoint = `/${userRole}/manager_occurrence/update/${currentContentType}/${currentOccurrenceId}`;
 
         fetch(endpoint, {
             method: 'POST',
@@ -165,7 +173,7 @@
     }
 
     function deleteOccurrence(id, csrf) {
-        fetch(`/manager/manager_occurrence/delete/${id}`, {
+        fetch(`/${userRole}/manager_occurrence/delete/${id}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
