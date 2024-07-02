@@ -1,0 +1,28 @@
+{% macro render_greeting(role, username) %}
+{% if role == 'teacher' %}
+<h1>Bem-vindo(a) professor(a) {{ username }}</h1>
+{% elif role == 'manager' %}
+<h1>Bem-vindo(a) gestor(a) {{ username }}</h1>
+{% else %}
+<h1>Bem-vindo(a) aluno(a) {{ username }}</h1>
+{% endif %}
+{% endmacro %}
+
+
+{% macro render_links(role, register_endpoint, manager_endpoint) %}
+<ul>
+    {% if role == 'manager'%}
+    <li><a href="{{ url_for('manager.register_subject') }}">Cadastrar disciplina</a></li>
+    <li><a href="{{ url_for('manager.register_class') }}">Cadastrar turma</a></li>
+    <li><a href="{{ url_for('manager.register_teacher') }}">Cadastrar professor</a></li>
+    <li><a href="{{ url_for('manager.register_student') }}">Cadastrar estudante</a></li>
+    <li><a href="{{ url_for(register_endpoint) }}">Registrar Ocorrência</a></li>
+    <li><a href="{{ url_for(manager_endpoint) }}">Gerir ocorrências</a></li>
+    {% elif role == 'teacher' %}
+    <li><a href="{{ url_for(register_endpoint) }}">Registrar Ocorrência</a></li>
+    <li><a href="{{ url_for(manager_endpoint) }}">Gerir ocorrências</a></li>
+    {% elif role == 'student' %}
+    <li><a href="{{ url_for(manager_endpoint) }}">Minhas ocorrências</a></li>
+    {% endif %}
+</ul>
+{% endmacro %}

@@ -1,12 +1,13 @@
 from flask import Blueprint, render_template, session
 from app.decorators import teacher_required
 from app.utils.common import (
+    index,
     occurrence_submission,
     search_students,
     manager_occurrence,
     search_occurrences,
     delete_occurrence,
-    update_occurrence_field
+    update_field
 )
 
 teacher_bp = Blueprint('teacher', __name__)
@@ -14,9 +15,8 @@ teacher_bp = Blueprint('teacher', __name__)
 
 @teacher_bp.route('/')
 @teacher_required
-def index():
-    username = session.get('username')
-    return render_template('teacher/index.html', username=username)
+def index_route():
+    return index()
 
 
 @teacher_bp.route('/register_occurrence', methods=['GET', 'POST'])
@@ -33,7 +33,7 @@ def search_students_route():
 
 @teacher_bp.route('/manager_occurrence')
 @teacher_required
-def teacher_occurrence_route():
+def manager_occurrence_route():
     return manager_occurrence()
 
 
@@ -50,4 +50,4 @@ def delete_occurrence_route(id):
 
 @teacher_bp.route('/manager_occurrence/update/<string:field>/<string:occurrence_id>', methods=['POST'])
 def update_occurrence_field_route(field, occurrence_id):
-    return update_occurrence_field(field, occurrence_id)
+    return update_field(field, occurrence_id)

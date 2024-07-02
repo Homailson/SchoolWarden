@@ -5,6 +5,21 @@ from app.forms import OccurrenceForm
 from bson.objectid import ObjectId
 
 
+def index():
+    role = session.get('role')
+    username = session.get('username')
+    return render_template('common/index.html',
+                           username=username,
+                           register_endpoint=f'{role}.register_occurrence',
+                           manager_endpoint=f'{role}.manager_occurrence_route',
+                           role=role
+                           )
+
+
+def sanitize_description(description):
+    return description.strip().replace("'", "").replace('"', '')
+
+
 def occurrence_submission(role):
     if 'role' not in session or session['role'] != role:
         flash('Acesso negado.', 'error')
@@ -44,7 +59,7 @@ def occurrence_submission(role):
         class_id = form.classe.data
         subject_id = form.subject.data
         classification = form.classification.data
-        description = form.description.data
+        description = sanitize_description(form.description.data)
 
         print("ID do estudante: ", student_id)
 
@@ -87,7 +102,7 @@ def occurrence_submission(role):
         )
 
         flash('Ocorrência cadastrada com sucesso!', 'success')
-        return redirect(url_for(f'{role}.index'))
+        return redirect(url_for(f'{role}.index_route'))
 
     return render_template(f'{role}/register_occurrence.html', form=form)
 
@@ -111,32 +126,14 @@ def get_users_by_id(ids):
 
 def manager_occurrence():
     user_role = session.get('role')
-    mongo = PyMongo(current_app)
-    occurrences = list(mongo.db.occurrences.find().sort("date", -1).limit(100))
-    teachers_ids = [occurrence['teacher_id'] for occurrence in occurrences]
-    students_ids = [occurrence['student_id'] for occurrence in occurrences]
-    teachers = get_users_by_id(teachers_ids)
-    students = get_users_by_id(students_ids)
-
-    occurrences_data = []
-    for i, occurrence in enumerate(occurrences):
-        occurrence_data = {
-            'id': str(occurrence['_id']),
-            'teacher': teachers[i]['username'],
-            'student': students[i]['username'],
-            'description': occurrence['description'],
-            'date': occurrence['date'].strftime('%d/%m/%Y')
-        }
-        occurrences_data.append(occurrence_data)
-
     return render_template(
-        'manager/manager_occurrence.html',
-        occurrences_data=occurrences_data,
+        'common/manager_occurrence.html',
         user_role=user_role
     )
 
 
 def search_occurrences():
+    # Parâmetros da requisição
     query = request.args.get('query', '').strip()
     start_date = request.args.get('start_date', '').strip()
     end_date = request.args.get('end_date', '').strip()
@@ -144,50 +141,68 @@ def search_occurrences():
     per_page = 15
     skip = (page - 1) * per_page
 
+    # Informações do usuário da sessão
+    userID = session.get('userID')
+    userRole = session.get('role')
+
+    # Filtro de busca inicial
     search_filter = {}
 
+    # Se o usuário for professor (teacher), filtra apenas as ocorrências dele
+    if userRole == 'teacher':
+        search_filter['teacher_id'] = userID
+
+    if userRole == 'student':
+        search_filter['student_id'] = userID
+
+    # Condições de busca baseadas na query de pesquisa
     if query:
         mongo = PyMongo(current_app)
 
-        # Busca pelos IDs dos usuários com base no username
-        users = list(mongo.db.users.find(
-            {'username': {'$regex': query, '$options': 'i'}}))
+        # Busca por IDs de usuários com base no username
+        users = mongo.db.users.find(
+            {'username': {'$regex': query, '$options': 'i'}})
         users_ids = [str(usr['_id']) for usr in users]
 
-        search_filter = {
-            '$or': [
-                {'description': {'$regex': query, '$options': 'i'}},
-                {'classification': {'$regex': query, '$options': 'i'}},
-                {'teacher_id': {'$in': users_ids}},
-                {'student_id': {'$in': users_ids}}
-            ]
-        }
+        # Condições de busca com operador $or
+        search_filter['$or'] = [
+            {'description': {'$regex': query, '$options': 'i'}},
+            {'classification': {'$regex': query, '$options': 'i'}},
+            {'teacher_id': {'$in': users_ids}},
+            {'student_id': {'$in': users_ids}}
+        ]
 
-    # Adicionando filtro por período (data)
+    # Adiciona filtro por período (data)
     if start_date and end_date:
-        search_filter['date'] = {
-            '$gte': datetime.strptime(start_date, '%Y-%m-%d'),
-            '$lte': datetime.strptime(end_date, '%Y-%m-%d')
-        }
+        search_filter['date'] = {'$gte': datetime.strptime(start_date, '%Y-%m-%d'),
+                                 '$lte': datetime.strptime(end_date, '%Y-%m-%d')}
 
-    # Adicionando filtro por status pendente (se aplicável)
-    status = request.args.get('status')  # Obtém o parâmetro de status
-    if status == 'pending':
+    # Adiciona filtro por status pendente, se aplicável
+    if request.args.get('status') == 'pending':
         search_filter['status'] = 'pendente'
 
+    # Conexão com o MongoDB
     mongo = PyMongo(current_app)
+
+    # Contagem total de ocorrências que correspondem ao filtro
     total_occurrences = mongo.db.occurrences.count_documents(search_filter)
+
+    # Ocorrências paginadas, ordenadas pela data decrescente
     occurrences = list(mongo.db.occurrences.find(
         search_filter).sort("date", -1).skip(skip).limit(per_page))
 
+    # IDs de professores e alunos envolvidos nas ocorrências
     teachers_ids = [occurrence['teacher_id'] for occurrence in occurrences]
     students_ids = [occurrence['student_id'] for occurrence in occurrences]
+
+    # Detalhes dos professores e alunos
     teachers = get_users_by_id(teachers_ids)
     students = get_users_by_id(students_ids)
 
+    # Formatação dos dados das ocorrências para retorno como JSON
     occurrences_data = []
     for i, occurrence in enumerate(occurrences):
-        occurrence_data = {
+        occurrences_data.append({
             'id': str(occurrence['_id']),
             'teacher': teachers[i]['username'],
             'student': students[i]['username'],
@@ -196,11 +211,12 @@ def search_occurrences():
             'description': occurrence['description'],
             'solution': occurrence['solution'],
             'date': occurrence['date'].strftime('%d/%m/%Y')
-        }
-        occurrences_data.append(occurrence_data)
+        })
 
+    # Cálculo do número total de páginas
     total_pages = (total_occurrences + per_page - 1) // per_page
 
+    # Retorno dos dados das ocorrências, página atual e número total de páginas como JSON
     return jsonify({
         'occurrences': occurrences_data,
         'current_page': page,
@@ -236,10 +252,10 @@ def delete_occurrence(id):
         return jsonify({'success': False, 'message': 'Occurrence not found.'}), 404
 
 
-def update_occurrence_field(field, occurrence_id):
+def update_field(field, occurrence_id):
     mongo = PyMongo(current_app)
     data = request.json
-    value = data.get(field)
+    value = sanitize_description(data.get(field))
     if not value:
         return jsonify(success=False, message=f"{field} not provided")
 

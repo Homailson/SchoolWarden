@@ -38,13 +38,13 @@ def create_app():
         if 'role' in session:
             role = session['role']
             if role == 'admin':
-                return redirect(url_for('admin.index'))
+                return redirect(url_for('admin.index_route'))
             elif role == 'teacher':
-                return redirect(url_for('teacher.index'))
+                return redirect(url_for('teacher.index_route'))
             elif role == 'student':
-                return redirect(url_for('student.index'))
+                return redirect(url_for('student.index_route'))
             elif role == 'manager':
-                return redirect(url_for('manager.index'))
+                return redirect(url_for('manager.index_route'))
 
         form = LoginForm()
         if form.validate_on_submit():
@@ -65,13 +65,13 @@ def create_app():
 
                     # Redirecionamento baseado no papel (role)
                     if user['role'] == 'admin':
-                        return redirect(url_for('admin.index'))
+                        return redirect(url_for('admin.index_route'))
                     elif user['role'] == 'teacher':
-                        return redirect(url_for('teacher.index'))
+                        return redirect(url_for('teacher.index_route'))
                     elif user['role'] == 'student':
-                        return redirect(url_for('student.index'))
+                        return redirect(url_for('student.index_route'))
                     elif user['role'] == 'manager':
-                        return redirect(url_for('manager.index'))
+                        return redirect(url_for('manager.index_route'))
                     else:
                         flash('Papel de usuário desconhecido', 'error')
                 else:

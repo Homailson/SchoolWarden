@@ -1,12 +1,29 @@
 {% extends "layout.html" %}
-{% block title %}Gerir Ocorrências{% endblock %}
+{% block title %}
+{% if user_role == 'teacher' %}
+Ocorrências | Professor
+{% elif user_role == 'manager' %}
+Ocorrências | Gestor
+{% elif user_role == 'student' %}
+Ocorrências | Aluno
+{% else %}
+Usuário
+{% endif %}
+{% endblock %}
 
 {% block content %}
 
 <div class="container">
-    <h1>Gerir Ocorrências</h1>
+    <h1>Quadro de Ocorrências</h1>
+    {% if user_role == 'manager' %}
     <input type="text" id="searchInput" placeholder="Pesquisar por aluno, professor, assunto ou tipo"
         onkeyup="fetchOccurrences()">
+    {% elif user_role == 'teacher' %}
+    <input type="text" id="searchInput" placeholder="Pesquisar por aluno, assunto ou tipo" onkeyup="fetchOccurrences()">
+    {% else %}
+    <input type="text" id="searchInput" placeholder="Pesquisar por professor, assunto ou tipo"
+        onkeyup="fetchOccurrences()">
+    {% endif %}
     <input type="date" id="start_date" onchange="fetchOccurrences()">
     <input type="date" id="end_date" onchange="fetchOccurrences()">
     <select id="filterStatus" onchange="fetchOccurrences()">
@@ -71,6 +88,7 @@
         const endDate = document.getElementById('end_date').value;
         const status = document.getElementById('filterStatus').value;
 
+
         let url = `/${userRole}/manager_occurrence/search?query=${query}&start_date=${startDate}&end_date=${endDate}&page=${currentPage}`;
 
         if (status !== 'all') {
@@ -90,11 +108,13 @@
                             <td>${occurrence.date}</td>
                             <td>${occurrence.classification}</td>
                             <td><span class="${statusClass}"></span></td>
-                            <td>${occurrence.description.substring(0, 50)}${occurrence.description.length > 50 ? '...' : ''}</td>
+                            <td>${occurrence.description.substring(0, 30)}${occurrence.description.length > 30 ? '...' : ''}</td>
                             <td>
-                                <button onclick="viewContent('description', '${occurrence.id}', '${occurrence.description}')">Descrição</button>
+                                <button onclick="viewContent('description', '${occurrence.id}', '${occurrence.description}')">Descrição completa</button>
                                 <button onclick="viewContent('solution', '${occurrence.id}', '${occurrence.solution}')">Solução</button>
-                                <button onclick="confirmDelete('${occurrence.id}', '{{ csrf_token() }}')">Excluir</button>
+                                {% if user_role != 'student' %}
+                                <button data-id="${occurrence.id}" onclick="confirmDelete('${occurrence.id}', '{{ csrf_token() }}')">Excluir</button>
+                                {% endif %}
                             </td>
                         </tr>`;
                 }).join('');
@@ -106,6 +126,13 @@
     function viewContent(type, id, content) {
         currentOccurrenceId = id;
         currentContentType = type;
+        if (type === 'description') {
+            type = 'Descrição';
+        } else if (type === 'solution') {
+            type = 'Solução';
+        } else {
+            type = type;
+        }
         document.getElementById('modalContentText').innerText = content;
         document.getElementById('modalContentTextarea').value = content;
         document.getElementById('modalContentTitle').innerText = `${type.charAt(0).toUpperCase() + type.slice(1)} da Ocorrência`;
@@ -114,9 +141,10 @@
         document.getElementById('contentModal').style.display = 'block';
 
         const editButton = document.getElementById('editButton');
-        if (userRole === 'manager' || (userRole === 'teacher' && type === 'description')) {
+        if (userRole === 'manager' || (userRole === 'teacher' && type === 'Descrição')) {
             editButton.style.display = 'inline-block';
-        } else {
+        }
+        else {
             editButton.style.display = 'none';
         }
     }

@@ -6,12 +6,13 @@ from app.forms import StudentForm
 from app.forms import TeacherForm
 from flask_pymongo import PyMongo
 from app.utils.common import (
+    index,
     occurrence_submission,
     search_students,
     manager_occurrence,
     search_occurrences,
     delete_occurrence,
-    update_occurrence_field
+    update_field
 )
 import bcrypt
 
@@ -20,9 +21,8 @@ manager_bp = Blueprint('manager', __name__)
 
 @manager_bp.route('/')
 @manager_required
-def index():
-    username = session.get('username')
-    return render_template('manager/index.html', username=username)
+def index_route():
+    return index()
 
 
 @manager_bp.route('/register_class', methods=['GET', 'POST'])
@@ -175,4 +175,4 @@ def delete_occurrence_route(id):
 
 @manager_bp.route('/manager_occurrence/update/<string:field>/<string:occurrence_id>', methods=['POST'])
 def update_occurrence_field_route(field, occurrence_id):
-    return update_occurrence_field(field, occurrence_id)
+    return update_field(field, occurrence_id)
