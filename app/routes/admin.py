@@ -25,7 +25,7 @@ def register_manager():
     if form.validate_on_submit():
         name = form.username.data
         password = form.password.data  # Capturar a senha do formulário
-
+        school = form.school.data
         # Hashing da senha
         hashed_password = bcrypt.hashpw(
             password.encode('utf-8'), bcrypt.gensalt())
@@ -37,6 +37,8 @@ def register_manager():
             'username': name,
             # Incluir a senha hashada no documento
             'password': hashed_password.decode('utf-8'),
+            'school': school,
+            'occurrences': [],
             'role': 'manager'
         })
         flash('Gestor(a) cadastrado com sucesso!', 'success')

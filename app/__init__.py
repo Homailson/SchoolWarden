@@ -65,7 +65,7 @@ def create_app():
 
                     # Redirecionamento baseado no papel (role)
                     if user['role'] == 'admin':
-                        return redirect(url_for('admin.index_route'))
+                        return redirect(url_for('admin.index'))
                     elif user['role'] == 'teacher':
                         return redirect(url_for('teacher.index_route'))
                     elif user['role'] == 'student':

@@ -43,6 +43,14 @@ class ManagerForm(FlaskForm):
                     message='As senhas precisam ser iguais')
         ]
     )
+
+    school = StringField(
+        'Escola',
+        validators=[
+            DataRequired(),
+            Length(max=64)
+        ]
+    )
     submit = SubmitField('Cadastrar')
 
 

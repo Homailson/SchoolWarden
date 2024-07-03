@@ -28,6 +28,13 @@
         {% endfor %}
     </div>
     <div>
+        {{ form.school.label }}<br>
+        {{ form.school(size=32) }}<br>
+        {% for error in form.school.errors %}
+        <span style="color: red;">[{{ error }}]</span>
+        {% endfor %}
+    </div>
+    <div>
         {{ form.submit() }}
     </div>
 </form>

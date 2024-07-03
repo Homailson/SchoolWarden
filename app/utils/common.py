@@ -27,6 +27,7 @@ def occurrence_submission(role):
 
     form = OccurrenceForm()
     mongo = PyMongo(current_app)
+    manager_id = session.get('userID')
 
     teachers = []
     classes = []
@@ -35,9 +36,10 @@ def occurrence_submission(role):
     if role == 'manager':
 
         # Buscar dados das coleções
-        teachers = list(mongo.db.users.find({'role': 'teacher'}))
-        classes = list(mongo.db.classes.find())
-        subjects = list(mongo.db.subjects.find())
+        teachers = list(mongo.db.users.find(
+            {'role': 'teacher', 'manager_id': manager_id}))
+        classes = list(mongo.db.classes.find({'manager_id': manager_id}))
+        subjects = list(mongo.db.subjects.find({'manager_id': manager_id}))
 
     elif role == 'teacher':
         userID = session.get('userID')
@@ -49,6 +51,7 @@ def occurrence_submission(role):
         teacher_subjects = teacher['subjects']
         subjects = [mongo.db.subjects.find_one(
             {"_id": ObjectId(sub_id)}) for sub_id in teacher_subjects]
+        manager_id = teacher['manager_id']
 
     # Atualizar as opções do formulário
     form.update_choices(teachers, classes, subjects)
@@ -72,6 +75,7 @@ def occurrence_submission(role):
             'student_id': student_id,
             'class_id': class_id,
             'subject_id': subject_id,
+            'manager_id': manager_id,
             'classification': classification,
             'description': description,
             'status': "pendente",
@@ -88,6 +92,11 @@ def occurrence_submission(role):
 
         mongo.db.users.update_one(
             {"_id": ObjectId(teacher_id)},
+            {"$push": {"occurrences": occurrence_id}}
+        )
+
+        mongo.db.users.update_one(
+            {"_id": ObjectId(manager_id)},
             {"$push": {"occurrences": occurrence_id}}
         )
 
@@ -108,10 +117,21 @@ def occurrence_submission(role):
 
 
 def search_students():
-    search_term = request.args.get('q', '')
     mongo = PyMongo(current_app)
+    userID = session.get('userID')
+    user = mongo.db.users.find_one({"_id": ObjectId(userID)})
+    if user['role'] == 'manager':
+        manager_id = userID
+    else:
+        manager_id = user['manager_id'
+                          ]
+    search_term = request.args.get('q', '')
+
     students = list(mongo.db.users.find(
-        {'role': 'student', 'username': {'$regex': search_term, '$options': 'i'}}))
+        {'role': 'student',
+         'username': {'$regex': search_term, '$options': 'i'},
+         'manager_id': manager_id})
+    )
     return jsonify([{'id': str(student['_id']), 'text': student['username']} for student in students])
 
 
@@ -134,6 +154,7 @@ def manager_occurrence():
 
 def search_occurrences():
     # Parâmetros da requisição
+    mongo = PyMongo(current_app)
     query = request.args.get('query', '').strip()
     start_date = request.args.get('start_date', '').strip()
     end_date = request.args.get('end_date', '').strip()
@@ -148,10 +169,16 @@ def search_occurrences():
     # Filtro de busca inicial
     search_filter = {}
 
+    if userRole == 'manager':
+        search_filter['manager_id'] = userID
+
     # Se o usuário for professor (teacher), filtra apenas as ocorrências dele
     if userRole == 'teacher':
         search_filter['teacher_id'] = userID
+        teacher = mongo.db.users.find_one({"_id": ObjectId(userID)})
+        search_filter['manager_id'] = teacher['manager_id']
 
+    # Se o usuário for professor (teacher), filtra apenas as ocorrências dele
     if userRole == 'student':
         search_filter['student_id'] = userID
 
@@ -169,7 +196,8 @@ def search_occurrences():
             {'description': {'$regex': query, '$options': 'i'}},
             {'classification': {'$regex': query, '$options': 'i'}},
             {'teacher_id': {'$in': users_ids}},
-            {'student_id': {'$in': users_ids}}
+            {'student_id': {'$in': users_ids}},
+            {'manager_id': ''}
         ]
 
     # Adiciona filtro por período (data)
