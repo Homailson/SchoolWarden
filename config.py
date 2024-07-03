@@ -1,4 +1,6 @@
+import os
+
+
 class Config:
     SECRET_KEY = 'uma-chave-secreta-muito-segura'
-    MONGO_URI = 'mongodb://localhost:27017/SchoolCare'
-    MONGO_DBNAME = 'SchoolCare'
+    MONGO_URI = os.getenv('MONGO_URI')

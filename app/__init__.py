@@ -4,6 +4,8 @@ from flask_wtf import CSRFProtect
 from config import Config
 from app.forms import LoginForm
 import bcrypt
+import certifi
+import os
 
 mongo = PyMongo()
 
@@ -13,7 +15,9 @@ def create_app():
     app.config.from_object(Config)
 
     # Initialize PyMongo with the app
-    mongo.init_app(app)
+    mongo_uri = os.getenv('MONGO_URI')
+    mongo.init_app(app, uri=mongo_uri, tlsCAFile=certifi.where())
+
     # Initialize CSRF protection
     csrf = CSRFProtect(app)
 
