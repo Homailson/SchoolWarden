@@ -18,7 +18,11 @@
     <nav>
         <a href="{{ url_for('main.index') }}">Home</a>
         <a href="{{ url_for('logout') }}">Logout</a>
+        {% if session['role'] %}
+        <a href="{{ url_for('login') }}">Painel de Controle</a>
+        {% else %}
         <a href="{{ url_for('login') }}">Login</a>
+        {% endif %}
     </nav>
     <div class="container">
         {% with messages = get_flashed_messages(with_categories=true) %}
