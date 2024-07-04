@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, session, current_app
 from app.decorators import admin_required
 from app.forms import ManagerForm
+from app.utils.common import index
 from flask_pymongo import PyMongo
 import bcrypt
 
@@ -9,9 +10,15 @@ admin_bp = Blueprint('admin', __name__)
 
 @admin_bp.route('/')
 @admin_required
-def index():
-    username = session.get('username')
-    return render_template('admin/index.html', username=username)
+def index_route():
+    return index()
+
+
+# @admin_bp.route('/')
+# @admin_required
+# def index():
+#     username = session.get('username')
+#     return render_template('admin/index.html', username=username)
 
 
 @admin_bp.route('/register', methods=['GET', 'POST'])

@@ -3,6 +3,8 @@
 <h1>Bem-vindo(a) professor(a) {{ username }}</h1>
 {% elif role == 'manager' %}
 <h1>Bem-vindo(a) gestor(a) {{ username }}</h1>
+{% elif role == 'admin' %}
+<h1>Bem-vindo(a) Admin {{ username }}</h1>
 {% else %}
 <h1>Bem-vindo(a) aluno(a) {{ username }}</h1>
 {% endif %}
@@ -23,6 +25,8 @@
     <li><a href="{{ url_for(manager_endpoint) }}">Gerir ocorrências</a></li>
     {% elif role == 'student' %}
     <li><a href="{{ url_for(manager_endpoint) }}">Minhas ocorrências</a></li>
+    {% else %}
+    <li><a href="{{ url_for('admin.register_manager') }}">Cadastrar Gestor</a></li>
     {% endif %}
 </ul>
 {% endmacro %}

@@ -68,7 +68,8 @@ def occurrence_submission(role):
 
         if student_id == "None":
             flash('Por favor, selecione um aluno válido.', 'error')
-            return render_template(f'{role}/register_occurrence.html', form=form)
+            endpoint = f'{role}.register_occurrence'
+            return render_template('common/register_occurrence.html', form=form, endpoint=endpoint)
 
         result = mongo.db.occurrences.insert_one({
             'teacher_id': teacher_id,
@@ -112,8 +113,8 @@ def occurrence_submission(role):
 
         flash('Ocorrência cadastrada com sucesso!', 'success')
         return redirect(url_for(f'{role}.index_route'))
-
-    return render_template(f'{role}/register_occurrence.html', form=form)
+    endpoint = f'{role}.register_occurrence'
+    return render_template('common/register_occurrence.html', form=form, endpoint=endpoint)
 
 
 def search_students():

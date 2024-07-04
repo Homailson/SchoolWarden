@@ -5,7 +5,7 @@ from config import Config
 from app.forms import LoginForm
 import bcrypt
 import certifi
-import os
+import secrets
 
 mongo = PyMongo()
 
@@ -13,10 +13,10 @@ mongo = PyMongo()
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+    app.config["SECRET_KEY"] = secrets.token_urlsafe(32)
 
     # Initialize PyMongo with the app
-    mongo_uri = os.getenv('MONGO_URI')
-    mongo.init_app(app, uri=mongo_uri, tlsCAFile=certifi.where())
+    mongo.init_app(app, app.config['MONGO_URI'])
 
     # Initialize CSRF protection
     csrf = CSRFProtect(app)
@@ -69,7 +69,7 @@ def create_app():
 
                     # Redirecionamento baseado no papel (role)
                     if user['role'] == 'admin':
-                        return redirect(url_for('admin.index'))
+                        return redirect(url_for('admin.index_route'))
                     elif user['role'] == 'teacher':
                         return redirect(url_for('teacher.index_route'))
                     elif user['role'] == 'student':
