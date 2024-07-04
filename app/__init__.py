@@ -4,7 +4,6 @@ from flask_wtf import CSRFProtect
 from config import Config
 from app.forms import LoginForm
 import bcrypt
-import certifi
 import secrets
 
 mongo = PyMongo()
