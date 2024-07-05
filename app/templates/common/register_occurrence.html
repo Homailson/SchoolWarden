@@ -3,66 +3,76 @@
 {% block title %}Cadastro de Ocorrência{% endblock %}
 
 {% block content %}
-<h2>Registro de Ocorrência</h2>
+<h2 class="text-center mb-4">Registro de Ocorrência</h2>
+
 <form method="POST" action="{{ url_for(endpoint) }}">
     {{ form.hidden_tag() }}
-    <div>
-        {{ form.teacher.label }}<br>
-        {{ form.teacher() }}<br>
+
+    <div class="mb-3">
+        <label for="teacher" class="form-label">Professor:</label>
+        {{ form.teacher(class="form-control") }}
         {% for error in form.teacher.errors %}
-        <span style="color: red;">{{ error }}</span>
+        <div class="text-danger">{{ error }}</div>
         {% endfor %}
     </div>
-    <div>
-        <label for="student-search">Aluno</label><br>
-        <select id="student-search" class="js-example-responsive select2" style="width: 20%;">
+
+    <div class="mb-3">
+        <label for="student-search" class="form-label">Aluno:</label>
+        <select id="student-search" class="js-example-responsive select2 form-control" style="width: 100%;">
             <option value="" selected>pesquisar</option>
             {% for student_id, student_name in form.student.choices %}
             <option value="{{ student_id }}">{{ student_name }}</option>
             {% endfor %}
-        </select><br>
+        </select>
         {% for error in form.student.errors %}
-        <span style="color: red;">{{ error }}</span>
+        <div class="text-danger">{{ error }}</div>
         {% endfor %}
-    </div>
-    <input type="hidden" name="student" id="student" value="{{ form.student.data }}">
-    <div>
-        {{ form.classe.label }}<br>
-        {{ form.classe() }}<br>
-        {% for error in form.classe.errors %}
-        <span style="color: red;">{{ error }}</span>
-        {% endfor %}
-    </div>
-    <div>
-        {{ form.subject.label }}<br>
-        {{ form.subject() }}<br>
-        {% for error in form.subject.errors %}
-        <span style="color: red;">{{ error }}</span>
-        {% endfor %}
-    </div>
-    <div>
-        {{ form.classification.label }}<br>
-        {{ form.classification() }}<br>
-        {% for error in form.classification.errors %}
-        <span style="color: red;">{{ error }}</span>
-        {% endfor %}
-    </div>
-    <div>
-        {{ form.description.label }}<br>
-        {{ form.description() }}<br>
-        {% for error in form.description.errors %}
-        <span style="color: red;">{{ error }}</span>
-        {% endfor %}
-    </div>
-    <div>
-        {{ form.submit() }}
+        <input type="hidden" name="student" id="student" value="{{ form.student.data }}">
     </div>
 
-    <!-- Carregando script necessário para traduzir o texto do select2 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/i18n/pt-BR.js"></script>
-    <script>
-        window.STUDENT_SEARCH_URL = "{{ url_for(session.role + '.search_students_route') }}";
-    </script>
-    <script src="{{ url_for('static', filename='js/select2.js') }}"></script>
+
+    <div class="mb-3">
+        <label for="classe" class="form-label">Turma:</label>
+        {{ form.classe(class="form-control") }}
+        {% for error in form.classe.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+    <div class="mb-3">
+        <label for="subject" class="form-label">Disciplina:</label>
+        {{ form.subject(class="form-control", id="subject") }}
+        {% for error in form.subject.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+
+    <div class="mb-3">
+        <label for="classification" class="form-label">Classificação:</label>
+        {{ form.classification(class="form-control", id="classification") }}
+        {% for error in form.classification.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+
+    <div class="mb-3">
+        <label for="description" class="form-label">Descrição:</label>
+        {{ form.description(class="form-control", id="description") }}
+        {% for error in form.description.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+
+    <button class="w-100 btn btn-lg btn-dark mt-3" type="submit">Enviar</button>
 </form>
+
+<!-- Carregando script necessário para traduzir o texto do select2 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/i18n/pt-BR.js"></script>
+<script>
+    window.STUDENT_SEARCH_URL = "{{ url_for(session.role + '.search_students_route') }}";
+</script>
+<script src="{{ url_for('static', filename='js/select2.js') }}"></script>
 {% endblock %}

@@ -171,10 +171,11 @@ class OccurrenceForm(FlaskForm):
                           validators=[DataRequired()])
     classification = SelectField(
         'Tipo',
-        choices=[('Bullying', 'Bullying'),
+        choices=[('', 'Selecione o tipo'),
+                 ('Bullying', 'Bullying'),
                  ('CyberBullying', 'CyberBullying'),
                  ('Atraso', 'Atraso'),
-                 ('Dormindo em sala', 'Domindo em sala'),
+                 ('Dormindo em sala', 'Dormindo em sala'),
                  ('Agressão física', 'Agressão física'),
                  ('Agressão verbal', 'Agressão verbal'),
                  ('Uso não autorizado de celular',

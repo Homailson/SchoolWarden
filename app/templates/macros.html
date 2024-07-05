@@ -12,21 +12,22 @@
 
 
 {% macro render_links(role, register_endpoint, manager_endpoint) %}
-<ul>
-    {% if role == 'manager'%}
-    <li><a href="{{ url_for('manager.register_subject') }}">Cadastrar disciplina</a></li>
-    <li><a href="{{ url_for('manager.register_class') }}">Cadastrar turma</a></li>
-    <li><a href="{{ url_for('manager.register_teacher') }}">Cadastrar professor</a></li>
-    <li><a href="{{ url_for('manager.register_student') }}">Cadastrar estudante</a></li>
-    <li><a href="{{ url_for(register_endpoint) }}">Registrar Ocorrência</a></li>
-    <li><a href="{{ url_for(manager_endpoint) }}">Gerir ocorrências</a></li>
+<div class="vertical-menu">
+    {% if role == 'manager' %}
+    <a href="{{ url_for('manager.register_subject') }}" class="btn btn-dark btn-block mb-2">Cadastrar disciplina</a>
+    <a href="{{ url_for('manager.register_class') }}" class="btn btn-dark btn-block mb-2">Cadastrar turma</a>
+    <a href="{{ url_for('manager.register_teacher') }}" class="btn btn-dark btn-block mb-2">Cadastrar professor</a>
+    <a href="{{ url_for('manager.register_student') }}" class="btn btn-dark btn-block mb-2">Cadastrar estudante</a>
+    <a href="{{ url_for(register_endpoint) }}" class="btn btn-dark btn-block mb-2">Registrar ocorrência</a>
+    <a href="{{ url_for(manager_endpoint) }}" class="btn btn-dark btn-block mb-2">Gerir ocorrências</a>
     {% elif role == 'teacher' %}
-    <li><a href="{{ url_for(register_endpoint) }}">Registrar Ocorrência</a></li>
-    <li><a href="{{ url_for(manager_endpoint) }}">Gerir ocorrências</a></li>
+    <a href="{{ url_for(register_endpoint) }}" class="btn btn-dark btn-block mb-2">Registrar ocorrência</a>
+    <a href="{{ url_for(manager_endpoint) }}" class="btn btn-dark btn-block mb-2">Gerir ocorrências</a>
     {% elif role == 'student' %}
-    <li><a href="{{ url_for(manager_endpoint) }}">Minhas ocorrências</a></li>
+    <a href="{{ url_for(manager_endpoint) }}" class="btn btn-dark btn-block mb-2">Minhas ocorrências</a>
     {% else %}
-    <li><a href="{{ url_for('admin.register_manager') }}">Cadastrar Gestor</a></li>
+    <a href="{{ url_for('admin.register_manager') }}" class="btn btn-dark btn-block mb-2">Cadastrar Gestor</a>
     {% endif %}
-</ul>
+</div>
+
 {% endmacro %}

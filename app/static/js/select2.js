@@ -1,4 +1,5 @@
 $(document).ready(function () {
+    // Configuração do Select2 para o campo de busca de alunos
     $('#student-search').select2({
         ajax: {
             url: window.STUDENT_SEARCH_URL,
@@ -19,8 +20,23 @@ $(document).ready(function () {
         language: "pt-BR"
     });
 
+    // Atualiza o input hidden com o ID do aluno selecionado
     $('#student-search').on('change', function () {
         var studentId = $(this).val();
         $('input[name="student"]').val(studentId).trigger('change');
+    });
+
+    // Configuração do Select2 para o campo de classificação
+    $('#classification').select2({
+        placeholder: "Selecione a classificação"
+    });
+    $('#teacher').select2({
+        placeholder: "Selecione um professor(a)"
+    });
+    $('#classe').select2({
+        placeholder: "Selecione uma classe"
+    });
+    $('#subject').select2({
+        placeholder: "Selecione a disciplina"
     });
 });

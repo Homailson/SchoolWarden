@@ -56,6 +56,11 @@ def occurrence_submission(role):
     # Atualizar as opções do formulário
     form.update_choices(teachers, classes, subjects)
 
+    # definindo o valor inicial dos campos do formulário atualizado
+    form.teacher.choices.insert(0, ("", "selecione um professor(a)"))
+    form.classe.choices.insert(0, ("", "selecione uma turma"))
+    form.subject.choices.insert(0, ("", "selecione uma disciplina"))
+
     if form.validate_on_submit():
         teacher_id = form.teacher.data
         student_id = form.student.data

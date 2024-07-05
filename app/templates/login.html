@@ -1,12 +1,28 @@
 {% extends 'layout.html' %}
 {% block content %}
-<h2>Login</h2>
-<form method="POST" action="{{ url_for('login') }}">
-    {{ form.hidden_tag() }}
-    <p>{{ form.username.label }}<br>
-        {{ form.username(size=32) }}</p>
-    <p>{{ form.password.label }}<br>
-        {{ form.password(size=32) }}</p>
-    <p>{{ form.submit() }}</p>
-</form>
+<main class="form-signin">
+    <form method="POST" action="{{ url_for('login') }}" class="needs-validation" novalidate>
+        {{ form.hidden_tag() }}
+
+        <h1 class="h3 mb-3 fw-normal text-center">Login</h1>
+
+        <div class="form-floating">
+            {{ form.username(size=32, class="form-control", id="username", placeholder="Username",
+            autocomplete="username") }}
+            <label for="username">{{ form.username.label }}</label>
+        </div>
+
+        <div class="form-floating">
+            {{ form.password(size=32, class="form-control", id="password", placeholder="Password",
+            autocomplete="current-password") }}
+            <label for="password">{{ form.password.label }}</label>
+        </div>
+
+        <button class="w-100 btn btn-lg btn-dark mt-3" type="submit">Entrar</button>
+    </form>
+</main>
+
+
+
+
 {% endblock %}
