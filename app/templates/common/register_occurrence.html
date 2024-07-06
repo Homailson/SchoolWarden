@@ -3,21 +3,21 @@
 {% block title %}Cadastro de Ocorrência{% endblock %}
 
 {% block content %}
-<h2 class="text-center mb-4">Registro de Ocorrência</h2>
+<h2 class="text-center mb-2 mt-4">Registro de Ocorrência</h2>
 
 <form method="POST" action="{{ url_for(endpoint) }}">
     {{ form.hidden_tag() }}
 
-    <div class="mb-3">
-        <label for="teacher" class="form-label">Professor:</label>
+    <div class="mb-2">
+        <label for="teacher" class="form-label">Professor</label>
         {{ form.teacher(class="form-control") }}
         {% for error in form.teacher.errors %}
         <div class="text-danger">{{ error }}</div>
         {% endfor %}
     </div>
 
-    <div class="mb-3">
-        <label for="student-search" class="form-label">Aluno:</label>
+    <div class="mb-2">
+        <label for="student-search" class="form-label">Aluno</label>
         <select id="student-search" class="js-example-responsive select2 form-control" style="width: 100%;">
             <option value="" selected>pesquisar</option>
             {% for student_id, student_name in form.student.choices %}
@@ -31,16 +31,16 @@
     </div>
 
 
-    <div class="mb-3">
-        <label for="classe" class="form-label">Turma:</label>
+    <div class="mb-2">
+        <label for="classe" class="form-label">Turma</label>
         {{ form.classe(class="form-control") }}
         {% for error in form.classe.errors %}
         <div class="text-danger">{{ error }}</div>
         {% endfor %}
     </div>
 
-    <div class="mb-3">
-        <label for="subject" class="form-label">Disciplina:</label>
+    <div class="mb-2">
+        <label for="subject" class="form-label">Disciplina</label>
         {{ form.subject(class="form-control", id="subject") }}
         {% for error in form.subject.errors %}
         <div class="text-danger">{{ error }}</div>
@@ -48,8 +48,8 @@
     </div>
 
 
-    <div class="mb-3">
-        <label for="classification" class="form-label">Classificação:</label>
+    <div class="mb-2">
+        <label for="classification" class="form-label">Tipo</label>
         {{ form.classification(class="form-control", id="classification") }}
         {% for error in form.classification.errors %}
         <div class="text-danger">{{ error }}</div>
@@ -57,8 +57,8 @@
     </div>
 
 
-    <div class="mb-3">
-        <label for="description" class="form-label">Descrição:</label>
+    <div class="mb-2">
+        <label for="description" class="form-label">Descrição</label>
         {{ form.description(class="form-control", id="description") }}
         {% for error in form.description.errors %}
         <div class="text-danger">{{ error }}</div>
@@ -66,7 +66,7 @@
     </div>
 
 
-    <button class="w-100 btn btn-lg btn-dark mt-3" type="submit">Enviar</button>
+    <button class="w-100 btn btn-dark" type="submit">Enviar</button>
 </form>
 
 <!-- Carregando script necessário para traduzir o texto do select2 -->

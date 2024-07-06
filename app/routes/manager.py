@@ -117,7 +117,7 @@ def register_teacher():
     mongo = PyMongo(current_app)
     manager_id = session.get('userID')
 
-    # Buscar turmas da coleção disciplinas
+    # Buscar turmas da coleção subjects
     subjects = [(str(sub['_id']), sub['subject'])
                 for sub in mongo.db.subjects.find({"manager_id": manager_id})]
     form.update_subjects(subjects)

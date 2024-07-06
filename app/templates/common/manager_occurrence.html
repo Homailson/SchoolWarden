@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+
 {% block title %}
 {% if user_role == 'teacher' %}
 Ocorrências | Professor
@@ -13,47 +14,70 @@ Usuário
 
 {% block content %}
 
-<div class="container">
-    <h1>Quadro de Ocorrências</h1>
-    {% if user_role == 'manager' %}
-    <input type="text" id="searchInput" placeholder="Pesquisar por aluno, professor, assunto ou tipo"
-        onkeyup="fetchOccurrences()">
-    {% elif user_role == 'teacher' %}
-    <input type="text" id="searchInput" placeholder="Pesquisar por aluno, assunto ou tipo" onkeyup="fetchOccurrences()">
-    {% else %}
-    <input type="text" id="searchInput" placeholder="Pesquisar por professor, assunto ou tipo"
-        onkeyup="fetchOccurrences()">
-    {% endif %}
-    <input type="date" id="start_date" onchange="fetchOccurrences()">
-    <input type="date" id="end_date" onchange="fetchOccurrences()">
-    <select id="filterStatus" onchange="fetchOccurrences()">
-        <option value="all">Todas as Ocorrências</option>
-        <option value="pending">Ocorrências Pendentes</option>
-    </select>
-    <button onclick="clearFilters()">Limpar Filtro</button>
+<div class="container__occurrence">
+    <h1 class="container__occurrence__title">Quadro de Ocorrências</h1>
+    <div class="filter_area">
+        {% if user_role == 'manager' %}
+        <div class="filter_group">
+            <label for="searchInput">Pesquisa por aluno, professor, assunto ou tipo</label>
+            <input class="searchInput" type="text" id="searchInput" placeholder="Pesquisa" onkeyup="fetchOccurrences()">
+        </div>
+        {% elif user_role == 'teacher' %}
+        <div class="filter_group">
+            <label for="searchInput">Pesquisar por aluno, assunto ou tipo</label>
+            <input class="searchInput" type="text" id="searchInput" placeholder="Pesquisa" onkeyup="fetchOccurrences()">
+        </div>
+        {% else %}
+        <div class="filter_group">
+            <label for="searchInput">Pesquisar por professor, assunto ou tipo</label>
+            <input class="searchInput" type="text" id="searchInput" placeholder="Pesquisa" onkeyup="fetchOccurrences()">
+        </div>
+        {% endif %}
 
-    <table id="ocorrenciasTable">
-        <thead>
-            <tr>
-                <th>Nome do Aluno</th>
-                <th>Nome do Professor</th>
-                <th>Data da Ocorrência</th>
-                <th>Tipo</th>
-                <th>Status</th>
-                <th>Descrição</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- O conteúdo é preenchido pela função JS -->
-        </tbody>
-    </table>
+        <div class="filter_group">
+            <label for="start_date">Data Inicial</label>
+            <input class="start_date" type="date" id="start_date" onchange="fetchOccurrences()">
+        </div>
 
-    <div id="pagination">
-        <button onclick="prevPage()">Anterior</button>
-        <span id="pageInfo"></span>
-        <button onclick="nextPage()">Próxima</button>
+        <div class="filter_group">
+            <label for="end_date">Data Final</label>
+            <input class="end_date" type="date" id="end_date" onchange="fetchOccurrences()">
+        </div>
+
+        <div class="filter_group">
+            <label for="filterStatus">Status</label>
+            <select class="filterStatus" id="filterStatus" onchange="fetchOccurrences()">
+                <option value="all">Todas as Ocorrências</option>
+                <option value="pending">Ocorrências Pendentes</option>
+            </select>
+        </div>
+
+        <button id="clear_filter_btn" class="btn btn-dark filter" onclick="clearFilters()">Limpar</button>
     </div>
+</div>
+
+<table id="ocorrenciasTable">
+    <thead>
+        <tr>
+            <th>Nome do Aluno</th>
+            <th>Nome do Professor</th>
+            <th>Data da Ocorrência</th>
+            <th>Tipo</th>
+            <th>Status</th>
+            <th>Descrição</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- O conteúdo é preenchido pela função JS -->
+    </tbody>
+</table>
+
+<div id="pagination">
+    <button onclick="prevPage()">Anterior</button>
+    <span id="pageInfo"></span>
+    <button onclick="nextPage()">Próxima</button>
+</div>
 </div>
 
 <!-- Modal Genérico para Descrição e Solução -->
@@ -110,11 +134,18 @@ Usuário
                             <td><span class="${statusClass}"></span></td>
                             <td>${occurrence.description.substring(0, 30)}${occurrence.description.length > 30 ? '...' : ''}</td>
                             <td>
-                                <button onclick="viewContent('description', '${occurrence.id}', '${occurrence.description}')">Descrição completa</button>
-                                <button onclick="viewContent('solution', '${occurrence.id}', '${occurrence.solution}')">Solução</button>
-                                {% if user_role != 'student' %}
-                                <button data-id="${occurrence.id}" onclick="confirmDelete('${occurrence.id}', '{{ csrf_token() }}')">Excluir</button>
-                                {% endif %}
+                                <div class="btn-group">
+                                    <button class="btn btn-primary" onclick="viewContent('description', '${occurrence.id}', '${occurrence.description}')">Descrição completa</button>
+                                    <button class="btn btn-success" onclick="viewContent('solution', '${occurrence.id}', '${occurrence.solution}')">Solução</button>
+                                    {% if user_role != 'student' %}
+                                    <button class="btn btn-delete" data-id="${occurrence.id}" onclick="confirmDelete('${occurrence.id}', '{{ csrf_token() }}')">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                                            <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                                        </svg>
+                                    </button>
+                                    {% endif %}
+                                </div>
                             </td>
                         </tr>`;
                 }).join('');
@@ -235,62 +266,18 @@ Usuário
     }
 </script>
 
-<style>
-    /* Estilos para o modal */
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgb(0, 0, 0);
-        background-color: rgba(0, 0, 0, 0.4);
-        padding-top: 60px;
-    }
+<script>
+    // Exemplo de efeito com jQuery
+    $(document).ready(function () {
+        $('#clear_filter_btn').on('mousedown', function () {
+            $(this).css('transform', 'scale(0.95)'); // Reduz o tamanho do botão temporariamente
+        });
 
-    .modal-content {
-        background-color: #fefefe;
-        margin: 5% auto;
-        padding: 20px;
-        border: 1px solid #888;
-        width: 80%;
-    }
+        $('#clear_filter_btn').on('mouseup', function () {
+            $(this).css('transform', 'scale(1)'); // Retorna ao tamanho original após soltar o clique
+        });
+    });
+</script>
 
-    .close {
-        color: #aaa;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-    }
-
-    .close:hover,
-    .close:focus {
-        color: black;
-        text-decoration: none;
-        cursor: pointer;
-    }
-
-    /* Estilos para os status */
-    .status-pending::before {
-        content: '';
-        display: inline-block;
-        width: 10px;
-        height: 10px;
-        background-color: red;
-        border-radius: 50%;
-    }
-
-    .status-resolved::before {
-        content: '';
-        display: inline-block;
-        width: 10px;
-        height: 10px;
-        background-color: green;
-        border-radius: 50%;
-    }
-</style>
-
+<script src="{{ url_for('static', filename='js/select2.js') }}"></script>
 {% endblock %}

@@ -28,15 +28,21 @@ $(document).ready(function () {
 
     // Configuração do Select2 para o campo de classificação
     $('#classification').select2({
-        placeholder: "Selecione a classificação"
+        placeholder: "Selecione um tipo"
     });
     $('#teacher').select2({
         placeholder: "Selecione um professor(a)"
     });
     $('#classe').select2({
-        placeholder: "Selecione uma classe"
+        placeholder: "Selecione uma turma"
     });
     $('#subject').select2({
-        placeholder: "Selecione a disciplina"
+        placeholder: "Selecione uma disciplina"
+    });
+    $('#subjects').select2({
+        placeholder: "Selecione as disciplinas",
+        multiple: true
+    });
+    $('#filterStatus').select2({
     });
 });

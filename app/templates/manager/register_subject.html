@@ -3,19 +3,20 @@
 {% block title %}Cadastro de Disciplina{% endblock %}
 
 {% block content %}
-<h2>Cadastro de Disciplina</h2>
+<h2 class="text-center mb-2 mt-4">Cadastro de Disciplina</h2>
 <form method="POST" action="{{ url_for('manager.register_subject') }}">
     {{ form.hidden_tag() }}
-    <div>
-        {{ form.subject.label }}<br>
-        {{ form.subject() }}<br>
+    <div class="mb-3">
+        <label for="subject" class="form-label">Disciplina</label>
+        {{ form.subject(class="form-control", id="subject") }}<br>
         {% for error in form.subject.errors %}
         <span style="color: red;">[{{ error }}]</span>
         {% endfor %}
     </div>
-    <div>
-        {{ form.submit() }}
-    </div>
+
+    <button class="w-100 btn btn-dark mt-3" type="submit">Cadastrar</button>
+
 </form>
+<script src="{{ url_for('static', filename='js/select2.js') }}"></script>
 
 {% endblock %}

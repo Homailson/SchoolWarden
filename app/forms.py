@@ -55,7 +55,8 @@ class ManagerForm(FlaskForm):
 
 
 class ClassForm(FlaskForm):
-    classe = SelectField('Selecione a Turma', choices=[
+    classe = SelectField('Turma', choices=[
+        ('', 'Selecione uma turma'),
         ('6A', '6A'), ('6B', '6B'), ('6C', '6C'),
         ('7A', '7A'), ('7B', '7B'), ('7C', '7C'),
         ('8A', '8A'), ('8B', '8B'), ('8C', '8C'),
@@ -65,7 +66,8 @@ class ClassForm(FlaskForm):
 
 
 class SubjectForm(FlaskForm):
-    subject = SelectField('Selecione uma Disciplina', choices=[
+    subject = SelectField('Disciplina', choices=[
+        ('', 'Selecione uma disciplina'),
         ('Matemática', 'Matemática'),
         ('L.Portuguesa', 'L.Portuguesa'),
         ('Geografia', 'Geografia'),
@@ -83,7 +85,53 @@ class SubjectForm(FlaskForm):
         ('Ens.Religioso', 'Ens.Religioso')
 
     ])
-    submit = SubmitField('Cadastrar Disciplina')
+
+
+class MultiCheckboxField(SelectMultipleField):
+    widget = ListWidget(prefix_label=False)
+    option_widget = CheckboxInput()
+
+
+# def at_least_one_selected(form, field):
+#     if not field.data:
+#         raise ValidationError(
+#             'Você deve selecionar pelo menos uma disciplina.')
+
+
+class TeacherForm(FlaskForm):
+    username = StringField(
+        'Usuário',
+        validators=[
+            DataRequired(),
+            Length(max=64)
+        ]
+    )
+    password = PasswordField(
+        'Senha',
+        validators=[
+            DataRequired(),
+            Length(min=8)
+        ]
+    )
+    confirm_password = PasswordField(
+        'Confirmar Senha',
+        validators=[
+            DataRequired(),
+            EqualTo('password',
+                    message='As senhas precisam ser iguais')
+        ]
+    )
+    subjects = SelectMultipleField('Disciplina', choices=[],
+                                   validators=[DataRequired()])
+    classes = SelectMultipleField('Turmas', choices=[],
+                                  validators=[DataRequired()])
+    submit = SubmitField('Cadastrar')
+
+    def update_subjects(self, subjects):
+        self.subjects.choices = subjects
+
+    def update_classes(self, classes):
+        self.classes.choices = classes
 
 
 class StudentForm(FlaskForm):
@@ -116,53 +164,6 @@ class StudentForm(FlaskForm):
         self.classe.choices = classes
 
 
-class MultiCheckboxField(SelectMultipleField):
-    widget = ListWidget(prefix_label=False)
-    option_widget = CheckboxInput()
-
-
-def at_least_one_selected(form, field):
-    if not field.data:
-        raise ValidationError(
-            'Você deve selecionar pelo menos uma disciplina.')
-
-
-class TeacherForm(FlaskForm):
-    username = StringField(
-        'Usuário',
-        validators=[
-            DataRequired(),
-            Length(max=64)
-        ]
-    )
-    password = PasswordField(
-        'Senha',
-        validators=[
-            DataRequired(),
-            Length(min=8)
-        ]
-    )
-    confirm_password = PasswordField(
-        'Confirmar Senha',
-        validators=[
-            DataRequired(),
-            EqualTo('password',
-                    message='As senhas precisam ser iguais')
-        ]
-    )
-    subjects = MultiCheckboxField('Disciplina', choices=[],
-                                  validators=[at_least_one_selected])
-    classes = MultiCheckboxField(
-        'Turmas', choices=[], validators=[at_least_one_selected])
-    submit = SubmitField('Cadastrar')
-
-    def update_subjects(self, subjects):
-        self.subjects.choices = subjects
-
-    def update_classes(self, classes):
-        self.classes.choices = classes
-
-
 class OccurrenceForm(FlaskForm):
     teacher = SelectField('Professor', choices=[], validators=[DataRequired()])
     student = StringField('Aluno', validators=[DataRequired()])
@@ -170,7 +171,6 @@ class OccurrenceForm(FlaskForm):
     subject = SelectField('Disciplina', choices=[],
                           validators=[DataRequired()])
     classification = SelectField(
-        'Tipo',
         choices=[('', 'Selecione o tipo'),
                  ('Bullying', 'Bullying'),
                  ('CyberBullying', 'CyberBullying'),
@@ -193,7 +193,6 @@ class OccurrenceForm(FlaskForm):
         validators=[DataRequired()]
     )
     description = TextAreaField('Descrição', validators=[DataRequired()])
-    submit = SubmitField('Cadastrar')
 
     def update_choices(self, teachers, classes, subjects):
         self.teacher.choices = [
