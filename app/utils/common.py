@@ -271,7 +271,7 @@ def delete_occurrence(id):
             {"$pull": {"occurrences": ObjectId(id)}}
         )
 
-        mongo.db.users.update_one(
+        mongo.db.users.update_many(
             {"occurrences": ObjectId(id)},
             {"$pull": {"occurrences": ObjectId(id)}}
         )
