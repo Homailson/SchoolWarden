@@ -15,125 +15,120 @@ Usuário
 {% block content %}
 
 <div class="container__occurrence">
-    <h1 class="container__occurrence__title">Quadro de Ocorrências</h1>
-    <div class="filter_area">
-        {% if user_role == 'manager' %}
-        <div class="filter_group">
-            <label for="searchInput">Pesquisa por aluno, professor, assunto ou tipo</label>
-            <input class="searchInput" type="text" id="searchInput" placeholder="Pesquisa" onkeyup="fetchOccurrences()">
-        </div>
-        {% elif user_role == 'teacher' %}
-        <div class="filter_group">
-            <label for="searchInput">Pesquisar por aluno, assunto ou tipo</label>
-            <input class="searchInput" type="text" id="searchInput" placeholder="Pesquisa" onkeyup="fetchOccurrences()">
-        </div>
-        {% else %}
-        <div class="filter_group">
-            <label for="searchInput">Pesquisar por professor, assunto ou tipo</label>
-            <input class="searchInput" type="text" id="searchInput" placeholder="Pesquisa" onkeyup="fetchOccurrences()">
-        </div>
-        {% endif %}
+    <h1 class="container__occurrence__title">Ocorrências</h1>
+    <div class="filter-menu">
+        <button id="toggleFilterBtn" class="btn btn-link" onclick="toggleFilters()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" color="black" fill="currentColor"
+                class="bi bi-filter" viewBox="0 0 16 16">
+                <path
+                    d="M6 10.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5m-2-3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5m-2-3a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5" />
+            </svg>
+        </button>
 
-        <div class="filter_group">
-            <label for="start_date">Data Inicial</label>
-            <input class="start_date" type="date" id="start_date" onchange="fetchOccurrences()">
-        </div>
+        <div id="filterMenu" class="hidden">
+            {% if user_role == 'teacher' %}
+            <div class="filter-group">
+                <label for="searchInput">Pesquisar por aluno, assunto ou tipo</label>
+                <input class="searchInput form-control" type="text" id="searchInput" placeholder="Pesquisar"
+                    onkeyup="fetchOccurrences()">
+            </div>
+            {% elif user_role == 'student' %}
+            <div class="filter-group">
+                <label for="searchInput">Pesquisar professor, assunto ou tipo</label>
+                <input class="searchInput form-control" type="text" id="searchInput" placeholder="Pesquisar"
+                    onkeyup="fetchOccurrences()">
+            </div>
+            {% else %}
+            <div class="filter-group">
+                <label for="searchInput">Pesquisar por aluno, professor, assunto ou tipo</label>
+                <input class="searchInput form-control" type="text" id="searchInput" placeholder="Pesquisar"
+                    onkeyup="fetchOccurrences()">
+            </div>
+            {% endif %}
+            <div class="filter-group">
+                <label for="start_date">Data Inicial</label>
+                <input class="start_date form-control" type="date" id="start_date" onchange="fetchOccurrences()">
+            </div>
 
-        <div class="filter_group">
-            <label for="end_date">Data Final</label>
-            <input class="end_date" type="date" id="end_date" onchange="fetchOccurrences()">
-        </div>
+            <div class="filter-group">
+                <label for="end_date">Data Final</label>
+                <input class="end_date form-control" type="date" id="end_date" onchange="fetchOccurrences()">
+            </div>
 
-        <div class="filter_group">
-            <label for="filterStatus">Status</label>
-            <select class="filterStatus" id="filterStatus" onchange="fetchOccurrences()">
-                <option value="all">Todas as Ocorrências</option>
-                <option value="pending">Ocorrências Pendentes</option>
-            </select>
-        </div>
+            <div class="filter-group">
+                <label for="filterStatus">Status</label>
+                <select class="filterStatus form-control" id="filterStatus" onchange="fetchOccurrences()">
+                    <option value="all">Todas as Ocorrências</option>
+                    <option value="pending">Ocorrências Pendentes</option>
+                </select>
+            </div>
 
-        <button id="clear_filter_btn" class="btn btn-dark filter" onclick="clearFilters()">Limpar</button>
-    </div>
-</div>
-
-<table id="ocorrenciasTable">
-    <thead>
-        <tr>
-            <th>Nome do Aluno</th>
-            <th>Nome do Professor</th>
-            <th>Data da Ocorrência</th>
-            <th>Tipo</th>
-            <th>Status</th>
-            <th>Descrição</th>
-            <th>Ações</th>
-        </tr>
-    </thead>
-    <tbody>
-        <!-- O conteúdo é preenchido pela função JS -->
-    </tbody>
-</table>
-
-<div id="pagination">
-    <button onclick="prevPage()">Anterior</button>
-    <span id="pageInfo"></span>
-    <button onclick="nextPage()">Próxima</button>
-</div>
-</div>
-
-<!-- Modal Genérico para Descrição e Solução -->
-<div id="contentModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeModal('contentModal')">&times;</span>
-        <h2 id="modalContentTitle"></h2>
-        <div id="modalContentView">
-            <p id="modalContentText"></p>
-            <button id="editButton" onclick="editContent('contentModal')">Editar</button>
-            <button onclick="closeModal('contentModal')">Fechar</button>
-        </div>
-        <div id="modalContentEdit" style="display:none;">
-            <textarea id="modalContentTextarea" rows="4" cols="50"></textarea>
-            <button onclick="saveContent('contentModal', '{{ csrf_token() }}')">Salvar</button>
-            <button onclick="cancelEdit('contentModal')">Cancelar</button>
+            <button id="clear_filter_btn" class="btn btn-dark filter" onclick="clearFilters()">Limpar</button>
         </div>
     </div>
-</div>
-
-<script>
-    let currentPage = 1;
-    let currentOccurrenceId = null;
-    let currentContentType = null;
-    const userRole = '{{ user_role }}';  // Role do usuário passada para o JavaScript
-
-    document.addEventListener('DOMContentLoaded', fetchOccurrences);
-
-    function fetchOccurrences() {
-        const query = document.getElementById('searchInput').value;
-        const startDate = document.getElementById('start_date').value;
-        const endDate = document.getElementById('end_date').value;
-        const status = document.getElementById('filterStatus').value;
 
 
-        let url = `/${userRole}/manager_occurrence/search?query=${query}&start_date=${startDate}&end_date=${endDate}&page=${currentPage}`;
+    <div class="card-deck">
+        <!-- Cards são preenchidos pela função JS -->
+    </div>
 
-        if (status !== 'all') {
-            url += `&status=${status}`;
-        }
+    <div id="pagination">
+        <button onclick="prevPage()">Anterior</button>
+        <span id="pageInfo"></span>
+        <button onclick="nextPage()">Próxima</button>
+    </div>
 
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                const tableBody = document.querySelector('#ocorrenciasTable tbody');
-                tableBody.innerHTML = data.occurrences.map(occurrence => {
-                    const statusClass = occurrence.status === 'pendente' ? 'status-pending' : 'status-resolved';
-                    return `
-                        <tr>
-                            <td>${occurrence.student}</td>
-                            <td>${occurrence.teacher}</td>
-                            <td>${occurrence.date}</td>
-                            <td>${occurrence.classification}</td>
-                            <td><span class="${statusClass}"></span></td>
-                            <td>${occurrence.description.substring(0, 30)}${occurrence.description.length > 30 ? '...' : ''}</td>
-                            <td>
+    <!-- Modal Genérico para Descrição e Solução -->
+    <div id="contentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('contentModal')">&times;</span>
+            <h2 id="modalContentTitle"></h2>
+            <div id="modalContentView">
+                <p id="modalContentText"></p>
+                <button id="editButton" class="btn btn-dark" onclick="editContent('contentModal')">Editar</button>
+                <button class="btn btn-dark" onclick="closeModal('contentModal')">Fechar</button>
+            </div>
+            <div id="modalContentEdit" style="display:none;">
+                <textarea id="modalContentTextarea" rows="4" cols="50"></textarea>
+                <button class="btn btn-dark" onclick="saveContent('contentModal', '{{ csrf_token() }}')">Salvar</button>
+                <button class="btn btn-dark" onclick="cancelEdit('contentModal')">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let currentOccurrenceId = null;
+        let currentContentType = null;
+        const userRole = '{{ user_role }}';  // Role do usuário passada para o JavaScript
+
+        document.addEventListener('DOMContentLoaded', fetchOccurrences);
+
+        function fetchOccurrences() {
+            const query = document.getElementById('searchInput').value;
+            const startDate = document.getElementById('start_date').value;
+            const endDate = document.getElementById('end_date').value;
+            const status = document.getElementById('filterStatus').value;
+
+            let url = `/${userRole}/manager_occurrence/search?query=${query}&start_date=${startDate}&end_date=${endDate}&page=${currentPage}`;
+
+            if (status !== 'all') {
+                url += `&status=${status}`;
+            }
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const cardDeck = document.querySelector('.card-deck');
+                    cardDeck.innerHTML = data.occurrences.map(occurrence => {
+                        const statusClass = occurrence.status === 'pendente' ? 'status-pending' : 'status-resolved';
+                        return `
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Aluno(a): ${occurrence.student}</h5>
+                                <h6 class="card-subtitle mb-2 text-muted">Professor(a): ${occurrence.teacher} - Data: ${occurrence.date}</h6>
+                                <p class="card-text">Descrição: ${occurrence.description.substring(0, 30)}${occurrence.description.length > 30 ? '...' : ''}</p>
+                                <p class="card-text">Status: <span class="${statusClass}"></span></p>
                                 <div class="btn-group">
                                     <button class="btn btn-primary" onclick="viewContent('description', '${occurrence.id}', '${occurrence.description}')">Descrição completa</button>
                                     <button class="btn btn-success" onclick="viewContent('solution', '${occurrence.id}', '${occurrence.solution}')">Solução</button>
@@ -146,138 +141,155 @@ Usuário
                                     </button>
                                     {% endif %}
                                 </div>
-                            </td>
-                        </tr>`;
-                }).join('');
+                            </div>
+                        </div>`;
+                    }).join('');
 
-                document.getElementById('pageInfo').innerText = `Página ${data.current_page} de ${data.total_pages}`;
-            });
-    }
-
-    function viewContent(type, id, content) {
-        currentOccurrenceId = id;
-        currentContentType = type;
-        if (type === 'description') {
-            type = 'Descrição';
-        } else if (type === 'solution') {
-            type = 'Solução';
-        } else {
-            type = type;
+                    document.getElementById('pageInfo').innerText = `Página ${data.current_page} de ${data.total_pages}`;
+                });
         }
-        document.getElementById('modalContentText').innerText = content;
-        document.getElementById('modalContentTextarea').value = content;
-        document.getElementById('modalContentTitle').innerText = `${type.charAt(0).toUpperCase() + type.slice(1)} da Ocorrência`;
-        document.getElementById('modalContentView').style.display = 'block';
-        document.getElementById('modalContentEdit').style.display = 'none';
-        document.getElementById('contentModal').style.display = 'block';
 
-        const editButton = document.getElementById('editButton');
-        if (userRole === 'manager' || (userRole === 'teacher' && type === 'Descrição')) {
-            editButton.style.display = 'inline-block';
-        }
-        else {
-            editButton.style.display = 'none';
-        }
-    }
-
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
-    }
-
-    function editContent(modalId) {
-        document.getElementById('modalContentView').style.display = 'none';
-        document.getElementById('modalContentEdit').style.display = 'block';
-    }
-
-    function cancelEdit(modalId) {
-        document.getElementById('modalContentView').style.display = 'block';
-        document.getElementById('modalContentEdit').style.display = 'none';
-    }
-
-    function saveContent(modalId, csrf) {
-        const newContent = document.getElementById('modalContentTextarea').value;
-        const endpoint = `/${userRole}/manager_occurrence/update/${currentContentType}/${currentOccurrenceId}`;
-
-        fetch(endpoint, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrf
-            },
-            body: JSON.stringify({ [currentContentType]: newContent })
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    closeModal(modalId);
-                    fetchOccurrences();
-                } else {
-                    alert(`Erro ao salvar a ${currentContentType}`);
-                }
-            })
-            .catch(error => {
-                console.error('There was a problem with the fetch operation:', error);
-            });
-    }
-
-    function confirmDelete(id, csrf) {
-        if (confirm("Tem certeza que deseja excluir esta ocorrência?")) {
-            deleteOccurrence(id, csrf);
-        }
-    }
-
-    function deleteOccurrence(id, csrf) {
-        fetch(`/${userRole}/manager_occurrence/delete/${id}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrf
+        function viewContent(type, id, content) {
+            currentOccurrenceId = id;
+            currentContentType = type;
+            if (type === 'description') {
+                type = 'Descrição';
+            } else if (type === 'solution') {
+                type = 'Solução';
+            } else {
+                type = type;
             }
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) fetchOccurrences();
-            });
-    }
+            document.getElementById('modalContentText').innerText = content;
+            document.getElementById('modalContentTextarea').value = content;
+            document.getElementById('modalContentTitle').innerText = `${type.charAt(0).toUpperCase() + type.slice(1)} da Ocorrência`;
+            document.getElementById('modalContentView').style.display = 'block';
+            document.getElementById('modalContentEdit').style.display = 'none';
+            document.getElementById('contentModal').style.display = 'block';
 
-    function prevPage() {
-        if (currentPage > 1) {
-            currentPage--;
+            const editButton = document.getElementById('editButton');
+            if (userRole === 'manager' || (userRole === 'teacher' && type === 'Descrição')) {
+                editButton.style.display = 'inline-block';
+            }
+            else {
+                editButton.style.display = 'none';
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function editContent(modalId) {
+            document.getElementById('modalContentView').style.display = 'none';
+            document.getElementById('modalContentEdit').style.display = 'block';
+        }
+
+        function cancelEdit(modalId) {
+            document.getElementById('modalContentView').style.display = 'block';
+            document.getElementById('modalContentEdit').style.display = 'none';
+        }
+
+        function saveContent(modalId, csrf) {
+            const newContent = document.getElementById('modalContentTextarea').value;
+            const endpoint = `/${userRole}/manager_occurrence/update/${currentContentType}/${currentOccurrenceId}`;
+
+            fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrf
+                },
+                body: JSON.stringify({ [currentContentType]: newContent })
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        closeModal(modalId);
+                        fetchOccurrences();
+                    } else {
+                        alert(`Erro ao salvar a ${currentContentType}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('There was a problem with the fetch operation:', error);
+                });
+        }
+
+        function confirmDelete(id, csrf) {
+            if (confirm("Tem certeza que deseja excluir esta ocorrência?")) {
+                deleteOccurrence(id, csrf);
+            }
+        }
+
+        function deleteOccurrence(id, csrf) {
+            fetch(`/${userRole}/manager_occurrence/delete/${id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrf
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) fetchOccurrences();
+                });
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                fetchOccurrences();
+            }
+        }
+
+        function nextPage() {
+            currentPage++;
             fetchOccurrences();
         }
-    }
 
-    function nextPage() {
-        currentPage++;
-        fetchOccurrences();
-    }
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('start_date').value = '';
+            document.getElementById('end_date').value = '';
+            document.getElementById('filterStatus').value = 'all';
+            fetchOccurrences();
+        }
+    </script>
 
-    function clearFilters() {
-        document.getElementById('searchInput').value = '';
-        document.getElementById('start_date').value = '';
-        document.getElementById('end_date').value = '';
-        document.getElementById('filterStatus').value = 'all';
-        fetchOccurrences();
-    }
-</script>
+    <script>
+        // Exemplo de efeito com jQuery
+        $(document).ready(function () {
+            $('#clear_filter_btn').on('mousedown', function () {
+                $(this).css('transform', 'scale(0.95)'); // Reduz o tamanho do botão temporariamente
+            });
 
-<script>
-    // Exemplo de efeito com jQuery
-    $(document).ready(function () {
-        $('#clear_filter_btn').on('mousedown', function () {
-            $(this).css('transform', 'scale(0.95)'); // Reduz o tamanho do botão temporariamente
+            $('#clear_filter_btn').on('mouseup', function () {
+                $(this).css('transform', 'scale(1)'); // Retorna ao tamanho original após soltar o clique
+            });
         });
+    </script>
 
-        $('#clear_filter_btn').on('mouseup', function () {
-            $(this).css('transform', 'scale(1)'); // Retorna ao tamanho original após soltar o clique
-        });
-    });
-</script>
+    <script>
+        function toggleFilters() {
+            var filterMenu = document.getElementById('filterMenu');
+            var toggleBtn = document.getElementById('toggleFilterBtn');
+            var icon = toggleBtn.querySelector('svg.bi-filter');
 
-<script src="{{ url_for('static', filename='js/select2.js') }}"></script>
-{% endblock %}
+            if (filterMenu.classList.contains('hidden')) {
+                filterMenu.classList.remove('hidden');
+                icon.setAttribute('class', 'bi bi-filter rotate-up'); // adiciona classe para girar o ícone para cima
+            } else {
+                filterMenu.classList.add('hidden');
+                icon.setAttribute('class', 'bi bi-filter'); // restaura a classe padrão do ícone
+            }
+        }
+    </script>
+
+
+    <script src="{{ url_for('static', filename='js/select2.js') }}"></script>
+    {% endblock %}

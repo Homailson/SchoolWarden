@@ -1,10 +1,8 @@
-h1 {
-    margin-top: 10px;
-    margin-bottom: 10px;
-}
-
+/* Estilos Globais e Gerais */
+h1,
 h2 {
     margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 .navbar-nav {
@@ -44,38 +42,22 @@ h2 {
 .form-control:focus {
     border-color: #495057;
     box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.1);
-
 }
 
-.vertical-menu {
-    margin-top: 20px;
-}
-
-.vertical-menu .btn.btn-block {
+/* Estilos para Menu Vertical e Botões */
+.vertical-menu .btn {
     width: 180px;
+    padding: 10px 15px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
 }
 
-.vertical-menu .btn.btn-block:hover {
+.vertical-menu .btn:hover {
     background-color: #555;
 }
 
-.container {
-    display: flex;
-    flex-direction: column;
-}
-
-.teacher_form {
-    width: 75%;
-    margin-top: 2rem;
-    align-self: center;
-}
-
-.student_form {
-    width: 75%;
-    margin-top: 2rem;
-    align-self: center;
-}
-
+/* Estilos para Layout Responsivo */
 @media (max-width: 992px) {
     .vertical-menu {
         text-align: center;
@@ -86,7 +68,7 @@ h2 {
         margin-top: 40px;
     }
 
-    .vertical-menu .btn.btn-block {
+    .vertical-menu .btn {
         margin: 20px;
     }
 
@@ -95,6 +77,7 @@ h2 {
     }
 }
 
+/* Estilos para Componentes Específicos */
 .bg-light {
     background-color: #f8f9fa !important;
     border-bottom: solid;
@@ -126,10 +109,14 @@ div.w-100.mb-3 {
 
 .modal-content {
     background-color: #fefefe;
-    margin: 5% auto;
+    margin: 10% auto;
+    /* Centraliza o modal verticalmente */
     padding: 20px;
     border: 1px solid #888;
     width: 80%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    /* Adiciona uma sombra suave */
+    border-radius: 8px;
 }
 
 .close {
@@ -146,26 +133,58 @@ div.w-100.mb-3 {
     cursor: pointer;
 }
 
-/* Estilos para os status */
-.status-pending::before {
-    content: '';
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    background-color: red;
-    border-radius: 50%;
+/* Estilo para os botões no modal */
+.modal-content button {
+    padding: 10px 15px;
+    margin-right: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
 }
 
+
+.modal-content button#editButton:focus {
+    outline: none;
+}
+
+.modal-content button:hover {
+    opacity: 0.8;
+}
+
+/* Estilo para o textarea no modal */
+.modal-content textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.modal-content textarea:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Estilos para os status */
+.status-pending::before,
 .status-resolved::before {
     content: '';
     display: inline-block;
     width: 10px;
     height: 10px;
-    background-color: green;
     border-radius: 50%;
 }
 
-/* A partir daqui são configurações da tabela e da pesquisa */
+.status-pending::before {
+    background-color: red;
+}
+
+.status-resolved::before {
+    background-color: green;
+}
+
 /* Estilos para o tema claro */
 .container__occurrence {
     font-size: 14px;
@@ -188,6 +207,7 @@ select {
     font-size: 14px;
 }
 
+/* Estilos para Botões Globais */
 .btn {
     padding: 10px 15px;
     border-radius: 4px;
@@ -195,10 +215,15 @@ select {
     font-size: 14px;
 }
 
-.btn-primary {
-    background-color: #333;
+.btn-primary,
+.btn-success,
+.btn-delete {
     color: #fff;
     border: none;
+}
+
+.btn-primary {
+    background-color: #333;
 }
 
 .btn-primary:hover {
@@ -207,8 +232,6 @@ select {
 
 .btn-success {
     background-color: #28a745;
-    color: #fff;
-    border: none;
 }
 
 .btn-success:hover {
@@ -217,37 +240,48 @@ select {
 
 .btn-delete {
     background-color: #dc3545;
-    color: #fff;
-    border: none;
 }
 
 .btn-delete:hover {
     background-color: #c82333;
 }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-    font-size: 14px;
+/* Estilos para Cards e Grupos de Botões */
+.card-deck {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-gap: 20px;
 }
 
-th,
-td {
-    padding: 10px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
+.card {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-th {
-    background-color: #f2f2f2;
+.card-title {
+    font-size: 1.2rem;
     font-weight: bold;
+    margin-bottom: 10px;
 }
 
-tbody tr:nth-child(even) {
-    background-color: #f9f9f9;
+.card-subtitle {
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 10px;
 }
 
+.card-text {
+    font-size: 1rem;
+    margin-bottom: 10px;
+}
+
+.btn-group {
+    margin-top: 10px;
+}
+
+/* Estilos para Paginação e Área de Filtro */
 #pagination {
     margin-top: 20px;
     text-align: center;
@@ -268,47 +302,63 @@ tbody tr:nth-child(even) {
     background-color: #555;
 }
 
-.filter_area {
-    display: flex;
+/* Estilos para Área de Filtro */
+.filter-menu {
+    background-color: #ffffff;
+    padding: 5px;
+    margin-bottom: 5px;
 }
 
-
-.filter_area label {
-    font-size: 1rem;
-    font-weight: bolder;
-    white-space: nowrap;
-    overflow: hidden;
+.filter-group {
+    margin-bottom: 10px;
 }
 
-.searchInput {
-    flex: 1;
-    width: 90%;
-    height: 2rem;
+.filter-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
 }
 
-.start_date {
-    height: 2rem;
+.filter-group input,
+.filter-group select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #dddddd;
+    border-radius: 4px;
+    font-size: 14px;
 }
 
-.end_date {
-    height: 2rem;
+.filter-group input[type="date"] {
+    padding: 6px;
 }
 
-.select2-container--default .select2-selection--single {
-    height: 2rem;
+.filter-group select {
+    padding: 8px;
 }
 
-button.btn.btn-dark.filter {
-    height: 60%;
-    align-self: center;
-    margin-left: 1rem;
+.btn-dark {
+    background-color: #343a40;
+    color: #ffffff;
+    border: 1px solid #343a40;
 }
 
-button.btn.btn-dark.filter {
-    box-shadow: none;
+.btn-dark:hover {
+    background-color: #23272b;
+    border-color: #1d2124;
 }
 
+.hidden {
+    display: none;
+}
+
+/* Estilos para Títulos de Seção */
 .container__occurrence__title {
     margin-bottom: 2rem;
     text-align: center;
+}
+
+.rotate-up {
+    transform: rotate(180deg);
+    transition: transform 0.3s ease;
+    /* adiciona uma transição suave para a rotação */
 }
