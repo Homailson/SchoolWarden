@@ -1,8 +1,9 @@
 from flask import current_app, flash, redirect, render_template, session, url_for, request, jsonify
 from flask_pymongo import PyMongo
 from datetime import datetime, timezone
-from app.forms import OccurrenceForm
+from app.forms import OccurrenceForm, ChangePasswordForm, ChangeEmailForm
 from bson.objectid import ObjectId
+import bcrypt
 
 
 def index():
@@ -322,3 +323,43 @@ def update_field(field, occurrence_id):
             )
         return jsonify(success=True)
     return jsonify(success=False)
+
+
+def configurations():
+    role = session.get('role')
+    return render_template('/common/configbase.html', role=role)
+
+
+def password_form_route():
+    form = ChangePasswordForm()
+    role = session['role']
+    return render_template('/common/change_password.html', form=form, role=role)
+
+
+def changing_password():
+    mongo = PyMongo(current_app)
+    form = ChangePasswordForm()
+    role = session['role']
+    if form.validate_on_submit():
+        userID = session.get('userID')
+        user = mongo.db.users.find_one({"_id": ObjectId(userID)})
+        user_password = user['password'].encode('utf-8')
+        if user and 'password' in user:
+            current_password = form.current_password.data.encode('utf-8')
+            if bcrypt.checkpw(current_password, user_password):
+                new_password = form.new_password.data.encode('utf-8')
+                hashed_password = bcrypt.hashpw(new_password, bcrypt.gensalt())
+                mongo.db.users.update_one(
+                    {"_id": ObjectId(userID)},
+                    {"$set": {"password": hashed_password.decode('utf-8')}}
+                )
+                flash('Sua senha foi alterada com sucesso!')
+            else:
+                flash('Senha atual inserida não corresponde', 'error')
+    return redirect(url_for(f'{role}.manager_configurations'))
+
+
+def email_form_route():
+    form = ChangeEmailForm()
+    role = session['role']
+    return render_template('/common/change_email.html', form=form, role=role)

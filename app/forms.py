@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, SelectField, SelectMultipleField, TextAreaField
-from wtforms.validators import DataRequired, Length, EqualTo, ValidationError
+from wtforms import StringField, PasswordField, SubmitField, SelectField, SelectMultipleField, TextAreaField, EmailField
+from wtforms.validators import DataRequired, Length, EqualTo
 from wtforms.widgets import ListWidget, CheckboxInput
 
 
@@ -52,6 +52,58 @@ class ManagerForm(FlaskForm):
         ]
     )
     submit = SubmitField('Cadastrar')
+
+
+class ChangeEmailForm(FlaskForm):
+    current_email = EmailField(
+        'E-mail atual',
+        validators=[
+            DataRequired()
+        ]
+    )
+
+    new_email = EmailField(
+        'E-mail novo',
+        validators=[
+            DataRequired()
+        ]
+    )
+
+    confirm_email = EmailField(
+        'Confirmar e-mail',
+        validators=[
+            DataRequired(),
+            EqualTo('new_email',
+                    message='Os e-mails precisam ser iguais')
+        ]
+    )
+    submit = SubmitField('Alterar')
+
+
+class ChangePasswordForm(FlaskForm):
+    current_password = PasswordField(
+        'Senha atual',
+        validators=[
+            DataRequired()
+        ]
+    )
+
+    new_password = PasswordField(
+        'Senha nova',
+        validators=[
+            DataRequired()
+        ]
+    )
+
+    confirm_password = PasswordField(
+        'Confirmar senha',
+        validators=[
+            DataRequired(),
+            EqualTo('new_password',
+                    message='As senhas precisam ser iguais')
+        ]
+    )
+    submit = SubmitField('Alterar')
 
 
 class ClassForm(FlaskForm):

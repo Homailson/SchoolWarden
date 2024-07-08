@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="sidebar">
+                <h3>Configurações</h3>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link config-nav-link"
+                            data-url="{{ url_for(role + '.change_email_form') }}">Alterar email</a>
+                        <a href="#" class="nav-link config-nav-link"
+                            data-url="{{ url_for(role + '.change_password_form') }}">Alterar senha</a>
+                    </li>
+                    <!-- Adicione mais itens de menu conforme necessário -->
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="main-content" id="main-content">
+                {% block pages %}
+                <h1>Alterar email</h1>
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        $('.config-nav-link').click(function (e) {
+            e.preventDefault();
+            var url = $(this).data('url');
+            $('#main-content').load(url + ' #page-content');
+        });
+    });
+</script>
+{% endblock %}

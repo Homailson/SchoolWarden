@@ -12,7 +12,11 @@ from app.utils.common import (
     manager_occurrence,
     search_occurrences,
     delete_occurrence,
-    update_field
+    update_field,
+    configurations,
+    password_form_route,
+    changing_password,
+    email_form_route
 )
 import bcrypt
 
@@ -177,10 +181,35 @@ def search_occurrences_route():
 
 
 @ manager_bp.route('/manager_occurrence/delete/<string:id>', methods=['POST'])
+@manager_required
 def delete_occurrence_route(id):
     return delete_occurrence(id)
 
 
 @ manager_bp.route('/manager_occurrence/update/<string:field>/<string:occurrence_id>', methods=['POST'])
+@manager_required
 def update_occurrence_field_route(field, occurrence_id):
     return update_field(field, occurrence_id)
+
+
+@manager_bp.route('/manager/configurations')
+@manager_required
+def manager_configurations():
+    return configurations()
+
+
+@manager_bp.route('/manager/configurations/change_password')
+@manager_required
+def change_password_form():
+    return password_form_route()
+
+
+@manager_bp.route('/manager/configurations/change_password', methods=['POST'])
+@manager_required
+def changing_password_route():
+    return changing_password()
+
+
+@manager_bp.route('/manager/configurations/change_email')
+def change_email_form():
+    return email_form_route()

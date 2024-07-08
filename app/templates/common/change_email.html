@@ -1,0 +1,28 @@
+{% block pages %}
+<div id="page-content">
+    <form method="POST" action="{{ url_for(role+'.changing_password_route') }}">
+        {{ form.hidden_tag() }}
+        <h1 class="h3 mb-3 fw-normal">Alterar e-mail</h1>
+        <div class="form-floating">
+            {{ form.current_email(size=32, class="form-control", id="current_email", placeholder="e-mail atual",
+            autocomplete="current-password") }}
+            <label for="current_email">{{ form.current_email.label }}</label>
+        </div>
+
+        <div class="form-floating">
+            {{ form.new_email(size=32, class="form-control", id="new_email", placeholder="Nova e-mail",
+            autocomplete="new-password") }}
+            <label for="new_email">{{ form.new_email.label }}</label>
+        </div>
+
+        <div class="form-floating">
+            {{ form.confirm_email(size=32, class="form-control", id="confirm_email", placeholder="Confirme a nova
+            e-mail",
+            autocomplete="new-password") }}
+            <label for="confirm_email">{{ form.confirm_email.label }}</label>
+        </div>
+
+        <button class="w-100 btn btn-lg btn-dark mt-3" type="submit">Alterar</button>
+    </form>
+</div>
+{% endblock %}
