@@ -3,6 +3,15 @@
 {% block title %}Página Inicial{% endblock %}
 
 {% block content %}
-<h1>School Warden</h1>
-<p>Transforme a Gestão Disciplinar da sua Escola</p>
+<div class="home">
+    <div class="home_text">
+        <h1>School Warden</h1>
+        <p>Transforme a gestão disciplinar da sua escola</p>
+    </div>
+    <div>
+        <img class="home_img" src="{{ url_for('static', filename='img/school_manager.jpeg') }}" alt="">
+    </div>
+
+</div>
+
 {% endblock %}

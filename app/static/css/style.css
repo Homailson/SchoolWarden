@@ -44,6 +44,21 @@ h2 {
     box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.1);
 }
 
+.home {
+    display: flex;
+    align-items: center;
+    text-align: center;
+}
+
+.home_text {
+    width: 100%;
+}
+
+.home_img {
+    width: 100%;
+    padding: 3rem;
+}
+
 /* Estilos para Menu Vertical e Botões */
 .vertical-menu .btn {
     width: 180px;
@@ -75,6 +90,20 @@ h2 {
     .teacher_form {
         width: 100%;
     }
+
+    .home {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .home_text {
+        width: 100%;
+    }
+
+    .home_img {
+        width: 100%;
+        padding: 1rem;
+    }
 }
 
 /* Estilos para Componentes Específicos */
@@ -91,6 +120,15 @@ h2 {
 
 div.w-100.mb-3 {
     height: 3.5rem;
+}
+
+.btn.btn-dark.filter {
+    box-shadow: none;
+}
+
+.manager_school {
+    width: 100%;
+    height: auto;
 }
 
 /* Estilos para o modal */
@@ -258,6 +296,13 @@ select {
     padding: 15px;
     border-radius: 5px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
 }
 
 .card-title {
