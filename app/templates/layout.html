@@ -12,6 +12,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Incluir Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 </head>
 
@@ -65,7 +66,7 @@
                 {% if session['role'] %}
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for( session['role'] + '.manager_configurations') }}">
+                        <a class="nav-link" href="{{ url_for( session['role'] + '.configurations_route') }}">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                                 class="bi bi-gear" viewBox="0 0 16 16">
                                 <path
@@ -126,6 +127,17 @@
             $('#main-content').load(url);
         });
     });
+</script>
+
+<script>
+    function toggleMenu() {
+        const navFlexColumn = document.getElementById('nav-list');
+        if (navFlexColumn.classList.contains('active')) {
+            navFlexColumn.classList.remove('active');
+        } else {
+            navFlexColumn.classList.add('active');
+        }
+    }
 </script>
 
 </html>

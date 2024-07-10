@@ -5,8 +5,8 @@ from wtforms.widgets import ListWidget, CheckboxInput
 
 
 class LoginForm(FlaskForm):
-    username = StringField(
-        'Usuário',
+    email = EmailField(
+        'E-mail',
         validators=[
             DataRequired()
         ]
@@ -20,6 +20,49 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Entrar')
 
 
+class SubjectForm(FlaskForm):
+    subject = SelectField('Disciplina', choices=[
+        ('', 'Selecione uma disciplina'),
+        ('Matemática', 'Matemática'),
+        ('L.Portuguesa', 'L.Portuguesa'),
+        ('Geografia', 'Geografia'),
+        ('L.Inglesa', 'L.Inglesa'),
+        ('História', 'História'),
+        ('Ciências', 'Ciências'),
+        ('Vida&Prevenção', 'Vida&Prevenção'),
+        ('Artes', 'Artes'),
+        ('Exp.Matemática', 'Exp.Matemática'),
+        ('Prod.Textual', 'Prod.Textual'),
+        ('Ciências&Tecnologia', 'Ciências&Tecnologia'),
+        ('Ed.Alimentar', 'Ed.Alimentar'),
+        ('Higiene&Saúde', 'Higiene&Saúde'),
+        ('Ed.Física', 'Ed.Física'),
+        ('Ens.Religioso', 'Ens.Religioso')
+
+    ])
+
+    def update_subjects(self, subjects):
+        self.subject.choices = [
+            (value, label) for value, label in self.subject.choices if label not in subjects
+        ]
+
+
+class ClassForm(FlaskForm):
+    classe = SelectField('Turma', choices=[
+        ('', 'Selecione uma turma'),
+        ('6A', '6A'), ('6B', '6B'), ('6C', '6C'),
+        ('7A', '7A'), ('7B', '7B'), ('7C', '7C'),
+        ('8A', '8A'), ('8B', '8B'), ('8C', '8C'),
+        ('9A', '9A'), ('9B', '9B'), ('9C', '9C')
+    ])
+    submit = SubmitField('Cadastrar Turma')
+
+    def update_classes(self, classes):
+        self.classe.choices = [
+            (value, label) for value, label in self.classe.choices if label not in classes
+        ]
+
+
 class ManagerForm(FlaskForm):
     username = StringField(
         'Usuário',
@@ -28,6 +71,23 @@ class ManagerForm(FlaskForm):
             Length(max=64)
         ]
     )
+
+    email = EmailField(
+        'E-mail',
+        validators=[
+            DataRequired()
+        ]
+    )
+
+    confirm_email = EmailField(
+        'Confirmar e-mail',
+        validators=[
+            DataRequired(),
+            EqualTo("email",
+                    message="Os emails precisam ser iguais")
+        ]
+    )
+
     password = PasswordField(
         'Senha',
         validators=[
@@ -35,8 +95,9 @@ class ManagerForm(FlaskForm):
             Length(min=8)
         ]
     )
+
     confirm_password = PasswordField(
-        'Confirmar Senha',
+        'Confirmar senha',
         validators=[
             DataRequired(),
             EqualTo('password',
@@ -54,16 +115,17 @@ class ManagerForm(FlaskForm):
     submit = SubmitField('Cadastrar')
 
 
-class ChangeEmailForm(FlaskForm):
-    current_email = EmailField(
-        'E-mail atual',
+class TeacherForm(FlaskForm):
+    username = StringField(
+        'Usuário',
         validators=[
-            DataRequired()
+            DataRequired(),
+            Length(max=64)
         ]
     )
 
-    new_email = EmailField(
-        'E-mail novo',
+    email = EmailField(
+        'E-mail',
         validators=[
             DataRequired()
         ]
@@ -73,91 +135,11 @@ class ChangeEmailForm(FlaskForm):
         'Confirmar e-mail',
         validators=[
             DataRequired(),
-            EqualTo('new_email',
-                    message='Os e-mails precisam ser iguais')
-        ]
-    )
-    submit = SubmitField('Alterar')
-
-
-class ChangePasswordForm(FlaskForm):
-    current_password = PasswordField(
-        'Senha atual',
-        validators=[
-            DataRequired()
+            EqualTo("email",
+                    message="Os emails precisam ser iguais")
         ]
     )
 
-    new_password = PasswordField(
-        'Senha nova',
-        validators=[
-            DataRequired()
-        ]
-    )
-
-    confirm_password = PasswordField(
-        'Confirmar senha',
-        validators=[
-            DataRequired(),
-            EqualTo('new_password',
-                    message='As senhas precisam ser iguais')
-        ]
-    )
-    submit = SubmitField('Alterar')
-
-
-class ClassForm(FlaskForm):
-    classe = SelectField('Turma', choices=[
-        ('', 'Selecione uma turma'),
-        ('6A', '6A'), ('6B', '6B'), ('6C', '6C'),
-        ('7A', '7A'), ('7B', '7B'), ('7C', '7C'),
-        ('8A', '8A'), ('8B', '8B'), ('8C', '8C'),
-        ('9A', '9A'), ('9B', '9B'), ('9C', '9C')
-    ])
-    submit = SubmitField('Cadastrar Turma')
-
-
-class SubjectForm(FlaskForm):
-    subject = SelectField('Disciplina', choices=[
-        ('', 'Selecione uma disciplina'),
-        ('Matemática', 'Matemática'),
-        ('L.Portuguesa', 'L.Portuguesa'),
-        ('Geografia', 'Geografia'),
-        ('L.Inglesa', 'L.Inglesa'),
-        ('História', 'História'),
-        ('Ciências', 'Ciências'),
-        ('Vida&Prevenção', 'Vida&Prevenção'),
-        ('Artes', 'Artes'),
-        ('Exp.Matemática', 'Exp.Matemática'),
-        ('Prod.Textual', 'Prod.Textual'),
-        ('Ciências&Tecnologia', 'Ciências&Tecnologia'),
-        ('EducaçãoAlimentar', 'EducaçãoAlimentar'),
-        ('Higiene&Saúde', 'Higiene&Saude'),
-        ('Ed.Física', 'Ed.Fisica'),
-        ('Ens.Religioso', 'Ens.Religioso')
-
-    ])
-
-
-class MultiCheckboxField(SelectMultipleField):
-    widget = ListWidget(prefix_label=False)
-    option_widget = CheckboxInput()
-
-
-# def at_least_one_selected(form, field):
-#     if not field.data:
-#         raise ValidationError(
-#             'Você deve selecionar pelo menos uma disciplina.')
-
-
-class TeacherForm(FlaskForm):
-    username = StringField(
-        'Usuário',
-        validators=[
-            DataRequired(),
-            Length(max=64)
-        ]
-    )
     password = PasswordField(
         'Senha',
         validators=[
@@ -194,6 +176,23 @@ class StudentForm(FlaskForm):
             Length(max=64)
         ]
     )
+
+    email = EmailField(
+        'E-mail',
+        validators=[
+            DataRequired()
+        ]
+    )
+
+    confirm_email = EmailField(
+        'Confirmar e-mail',
+        validators=[
+            DataRequired(),
+            EqualTo("email",
+                    message="Os emails precisam ser iguais")
+        ]
+    )
+
     password = PasswordField(
         'Senha',
         validators=[
@@ -214,6 +213,11 @@ class StudentForm(FlaskForm):
 
     def update_classes(self, classes):
         self.classe.choices = classes
+
+
+class MultiCheckboxField(SelectMultipleField):
+    widget = ListWidget(prefix_label=False)
+    option_widget = CheckboxInput()
 
 
 class OccurrenceForm(FlaskForm):
@@ -253,3 +257,48 @@ class OccurrenceForm(FlaskForm):
                                for classe in classes]
         self.subject.choices = [(subject['_id'], subject['subject'])
                                 for subject in subjects]
+
+
+class ChangeEmailForm(FlaskForm):
+    new_email = EmailField(
+        'E-mail novo',
+        validators=[
+            DataRequired()
+        ]
+    )
+
+    confirm_email = EmailField(
+        'Confirmar e-mail',
+        validators=[
+            DataRequired(),
+            EqualTo('new_email',
+                    message='Os emails não coincidem!')
+        ]
+    )
+    submit = SubmitField('Alterar')
+
+
+class ChangePasswordForm(FlaskForm):
+    current_password = PasswordField(
+        'Senha atual',
+        validators=[
+            DataRequired()
+        ]
+    )
+
+    new_password = PasswordField(
+        'Senha nova',
+        validators=[
+            DataRequired()
+        ]
+    )
+
+    confirm_password = PasswordField(
+        'Confirmar senha',
+        validators=[
+            DataRequired(),
+            EqualTo('new_password',
+                    message='As senhas precisam ser iguais')
+        ]
+    )
+    submit = SubmitField('Alterar')

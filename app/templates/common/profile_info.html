@@ -1,0 +1,27 @@
+<div class="profile_info">
+    <h2>Informações do perfil</h2>
+    <div class="card"">
+        <ul class=" list-group list-group-flush">
+        <li class="list-group-item">
+            <p>Usuário: {{ username }}</p>
+        </li>
+        <li class="list-group-item">
+            <p>Escola: {{ school }}</p>
+        </li>
+        <li class="list-group-item">
+            <p>E-mail: {{ email }}</p>
+        </li>
+        <li class="list-group-item">
+            {% if role == 'teacher' %}
+            <p>Função: Professor(a)</p>
+            {% elif role == 'admin' %}
+            <p>Função: Administrador(a)</p>
+            {% elif role == 'student' %}
+            <p>Função: Aluno(a)</p>
+            {% elif role == 'manager' %}
+            <p>Função: Gestor(a)</p>
+            {% endif %}
+        </li>
+        </ul>
+    </div>
+</div>

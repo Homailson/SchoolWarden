@@ -1,7 +1,15 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, session, current_app
 from app.decorators import admin_required
 from app.forms import ManagerForm
-from app.utils.common import index
+from app.utils.common import (
+    index,
+    configurations,
+    password_form_route,
+    changing_password,
+    email_form_route,
+    changing_email,
+    profile_info
+)
 from flask_pymongo import PyMongo
 import bcrypt
 
@@ -12,13 +20,6 @@ admin_bp = Blueprint('admin', __name__)
 @admin_required
 def index_route():
     return index()
-
-
-# @admin_bp.route('/')
-# @admin_required
-# def index():
-#     username = session.get('username')
-#     return render_template('admin/index.html', username=username)
 
 
 @admin_bp.route('/register', methods=['GET', 'POST'])
@@ -33,22 +34,65 @@ def register_manager():
         name = form.username.data
         password = form.password.data  # Capturar a senha do formulário
         school = form.school.data
-        # Hashing da senha
-        hashed_password = bcrypt.hashpw(
-            password.encode('utf-8'), bcrypt.gensalt())
+        email = form.email.data
+        confirm_email = form.confirm_email.data
+        if email != confirm_email:
+            flash('As senhas não coincidem!')
+            return redirect(url_for('admin.register_manager'))
+        else:
+            # Hashing da senha
+            hashed_password = bcrypt.hashpw(
+                password.encode('utf-8'), bcrypt.gensalt())
 
-        mongo = PyMongo(current_app)
+            mongo = PyMongo(current_app)
 
-        # Inserir o novo gestor no banco de dados
-        mongo.db.users.insert_one({
-            'username': name,
-            # Incluir a senha hashada no documento
-            'password': hashed_password.decode('utf-8'),
-            'school': school,
-            'occurrences': [],
-            'role': 'manager'
-        })
-        flash('Gestor(a) cadastrado com sucesso!', 'success')
-        return redirect(url_for('admin.index'))
+            # Inserir o novo gestor no banco de dados
+            mongo.db.users.insert_one({
+                'username': name,
+                'email': email,
+                'password': hashed_password.decode('utf-8'),
+                'school': school,
+                'occurrences': [],
+                'subjects': [],
+                'classes': [],
+                'role': 'manager'
+            })
+            flash('Gestor(a) cadastrado com sucesso!', 'success')
+            return redirect(url_for('admin.index_route'))
 
     return render_template('admin/register_manager.html', form=form)
+
+
+@admin_bp.route('/configurations')
+@admin_required
+def configurations_route():
+    return configurations()
+
+
+@admin_bp.route('/configurations/password')
+@admin_required
+def change_password_form():
+    return password_form_route()
+
+
+@admin_bp.route('/profile_info')
+@admin_required
+def profile_info_route():
+    return profile_info()
+
+
+@admin_bp.route('/configurations/password/change', methods=['POST'])
+@admin_required
+def changing_password_route():
+    return changing_password()
+
+
+@admin_bp.route('/configurations/email')
+def change_email_form():
+    return email_form_route()
+
+
+@admin_bp.route('/configurations/email/change', methods=['POST'])
+@admin_required
+def changing_email_route():
+    return changing_email()

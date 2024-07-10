@@ -7,7 +7,13 @@ from app.utils.common import (
     manager_occurrence,
     search_occurrences,
     delete_occurrence,
-    update_field
+    update_field,
+    configurations,
+    password_form_route,
+    changing_password,
+    email_form_route,
+    changing_email,
+    profile_info
 )
 
 teacher_bp = Blueprint('teacher', __name__)
@@ -51,3 +57,38 @@ def delete_occurrence_route(id):
 @teacher_bp.route('/manager_occurrence/update/<string:field>/<string:occurrence_id>', methods=['POST'])
 def update_occurrence_field_route(field, occurrence_id):
     return update_field(field, occurrence_id)
+
+
+@teacher_bp.route('/configurations')
+@teacher_required
+def configurations_route():
+    return configurations()
+
+
+@ teacher_bp.route('/profile_info')
+@ teacher_required
+def profile_info_route():
+    return profile_info()
+
+
+@teacher_bp.route('/configurations/password')
+@teacher_required
+def change_password_form():
+    return password_form_route()
+
+
+@teacher_bp.route('/configurations/password/change', methods=['POST'])
+@teacher_required
+def changing_password_route():
+    return changing_password()
+
+
+@teacher_bp.route('/configurations/email')
+def change_email_form():
+    return email_form_route()
+
+
+@teacher_bp.route('/configurations/email/change', methods=['POST'])
+@teacher_required
+def changing_email_route():
+    return changing_email()

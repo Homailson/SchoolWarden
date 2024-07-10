@@ -7,7 +7,9 @@ from app.utils.common import (
     configurations,
     password_form_route,
     changing_password,
-    email_form_route
+    email_form_route,
+    changing_email,
+    profile_info
 )
 
 student_bp = Blueprint('student', __name__)
@@ -33,23 +35,35 @@ def search_occurrences_route():
 
 @student_bp.route('/student/configurations')
 @student_required
-def manager_configurations():
+def configurations_route():
     return configurations()
 
 
-@student_bp.route('/student/configurations/change_password')
+@ student_bp.route('/profile_info')
+@ student_required
+def profile_info_route():
+    return profile_info()
+
+
+@student_bp.route('/configurations/password')
 @student_required
 def change_password_form():
     return password_form_route()
 
 
-@student_bp.route('/student/configurations/change_password', methods=['POST'])
+@student_bp.route('/configurations/password/change', methods=['POST'])
 @student_required
 def changing_password_route():
     return changing_password()
 
 
-@student_bp.route('/student/configurations/change_email')
+@student_bp.route('/configurations/email')
 @student_required
 def change_email_form():
     return email_form_route()
+
+
+@student_bp.route('/configurations/email/change', methods=['POST'])
+@student_required
+def changing_email_route():
+    return changing_email()

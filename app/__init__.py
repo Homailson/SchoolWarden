@@ -51,19 +51,20 @@ def create_app():
 
         form = LoginForm()
         if form.validate_on_submit():
-            username = form.username.data
+            email = form.email.data
             password = form.password.data.encode(
                 'utf-8')  # Encode password to bytes
 
             # Aqui você implementa a lógica para verificar o usuário e senha no MongoDB
-            user = mongo.db.users.find_one({'username': username})
+            user = mongo.db.users.find_one({'email': email})
 
-            if user and 'password' in user:
+            if user and 'email' in user:
                 hashed_password = user['password'].encode(
                     'utf-8')  # Encode hashed password to bytes
                 if bcrypt.checkpw(password, hashed_password):
                     session['role'] = user['role']
                     session['username'] = user['username']
+                    session['email'] = user['email']
                     session['userID'] = str(user['_id'])
 
                     # Redirecionamento baseado no papel (role)

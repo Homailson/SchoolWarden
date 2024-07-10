@@ -3,39 +3,63 @@
 {% block title %}Cadastro de Gestor{% endblock %}
 
 {% block content %}
-<h2>Cadastro de Gestor</h2>
+<h2 class="text-center mb-2 mt-4">Cadastro de Gestor</h2>
 <form method="POST" action="{{ url_for('admin.register_manager') }}">
     {{ form.hidden_tag() }}
-    <div>
-        {{ form.username.label }}<br>
-        {{ form.username(size=32) }}<br>
-        {% for error in form.username.errors %}
-        <span style="color: red;">[{{ error }}]</span>
-        {% endfor %}
+    <div class="form-group row mb-3">
+        <label for="username" class="col-sm-2 col-form-label">Usuário</label>
+        <div class="col-sm-10">
+            {{ form.username(size=32, class="form-control", id="username") }}
+            {% for error in form.username.errors %}
+            <span style="color: red;">{{ error }}</span>
+            {% endfor %}
+        </div>
     </div>
-    <div>
-        {{ form.password.label }}<br>
-        {{ form.password(size=32) }}<br>
-        {% for error in form.password.errors %}
-        <span style="color: red;">[{{ error }}]</span>
-        {% endfor %}
+    <div class="form-group row mb-3">
+        <label for="email" class="col-sm-2 col-form-label">Email</label>
+        <div class="col-sm-10">
+            {{ form.email(size=32, class="form-control", id="email") }}
+            {% for error in form.email.errors %}
+            <span style="color: red;">{{ error }}</span>
+            {% endfor %}
+        </div>
     </div>
-    <div>
-        {{ form.confirm_password.label }}<br>
-        {{ form.confirm_password(size=32) }}<br>
-        {% for error in form.confirm_password.errors %}
-        <span style="color: red;">[{{ error }}]</span>
-        {% endfor %}
+    <div class="form-group row mb-3">
+        <label for="confirm_email" class="col-sm-2 col-form-label">Confirmar Email</label>
+        <div class="col-sm-10">
+            {{ form.confirm_email(size=32, class="form-control", id="confirm_email") }}
+            {% for error in form.confirm_email.errors %}
+            <span style="color: red;">{{ error }}</span>
+            {% endfor %}
+        </div>
     </div>
-    <div>
-        {{ form.school.label }}<br>
-        {{ form.school(size=32) }}<br>
-        {% for error in form.school.errors %}
-        <span style="color: red;">[{{ error }}]</span>
-        {% endfor %}
+    <div class="form-group row mb-3">
+        <label for="password" class="col-sm-2 col-form-label">Senha</label>
+        <div class="col-sm-10">
+            {{ form.password(size=32, class="form-control", id="password") }}
+            {% for error in form.password.errors %}
+            <span style="color: red;">{{ error }}</span>
+            {% endfor %}
+        </div>
     </div>
-    <div>
-        {{ form.submit() }}
+    <div class="form-group row mb-3">
+        <label for="confirm_password" class="col-sm-2 col-form-label">Confirmar Senha</label>
+        <div class="col-sm-10">
+            {{ form.confirm_password(size=32, class="form-control", id="confirm_password") }}
+            {% for error in form.confirm_password.errors %}
+            <span style="color: red;">{{ error }}</span>
+            {% endfor %}
+        </div>
     </div>
+    <div class="form-group row mb-3">
+        <label for="school" class="col-sm-2 col-form-label">Escola</label>
+        <div class="col-sm-10">
+            {{ form.school(size=32, class="form-control", id="school") }}
+            {% for error in form.school.errors %}
+            <span style="color: red;">{{ error }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    <button class="w-100 btn btn-dark mt-3" type="submit">Cadastrar</button>
 </form>
 {% endblock %}

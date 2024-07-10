@@ -130,6 +130,7 @@ Usuário
                                 <p class="card-text">Data: ${occurrence.date}</p>
                                 <p class="card-text">Descrição: ${occurrence.description.substring(0, 50)}${occurrence.description.length > 50 ? '...' : ''}</p>
                                 <p class="card-text">Tipo: ${occurrence.classification}</p>
+                                <p class="card-text">Turma: ${occurrence.classe}</p>
                                 <p class="card-text">Status: <span class="${statusClass}"></span></p>
                                 <div class="btn-group">
                                     <button class="btn btn-primary" onclick="viewContent('description', '${occurrence.id}', '${occurrence.description}')">Descrição completa</button>

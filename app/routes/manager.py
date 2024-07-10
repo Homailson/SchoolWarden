@@ -1,10 +1,11 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app
 from app.decorators import manager_required
 from app.forms import ClassForm
 from app.forms import SubjectForm
 from app.forms import StudentForm
 from app.forms import TeacherForm
 from flask_pymongo import PyMongo
+from bson.objectid import ObjectId
 from app.utils.common import (
     index,
     occurrence_submission,
@@ -16,7 +17,9 @@ from app.utils.common import (
     configurations,
     password_form_route,
     changing_password,
-    email_form_route
+    email_form_route,
+    changing_email,
+    profile_info
 )
 import bcrypt
 
@@ -29,89 +32,79 @@ def index_route():
     return index()
 
 
-@manager_bp.route('/register_class', methods=['GET', 'POST'])
-@manager_required
-def register_class():
-    manager_id = session.get('userID')
-    form = ClassForm()
-    if form.validate_on_submit():
-        classe = form.classe.data
-        mongo = PyMongo(current_app)
-
-        # Inserir a nova turma no banco de dados
-        mongo.db.classes.insert_one({
-            'classe': classe,
-            'occurrences': [],
-            'manager_id': manager_id
-        })
-        flash('Turma cadastrada com sucesso!', 'success')
-        return redirect(url_for('manager.index_route'))
-
-    return render_template('manager/register_class.html', form=form)
-
-
 @manager_bp.route('/register_subject', methods=['GET', 'POST'])
 @manager_required
 def register_subject():
     manager_id = session.get('userID')
+    mongo = PyMongo(current_app)
+    user = mongo.db.users.find_one({"_id": ObjectId(manager_id)})
+    subjects_ids = user['subjects']
+    subjects_mongo = [mongo.db.subjects.find_one(
+        {"_id": id}) for id in subjects_ids]
+    print(subjects_mongo)
+    subjects = [subj['subject'] for subj in subjects_mongo]
     form = SubjectForm()
+    form.update_subjects(subjects)
     if form.validate_on_submit():
         subject = form.subject.data
-        mongo = PyMongo(current_app)
 
         # Inserir a nova turma no banco de dados
-        mongo.db.subjects.insert_one({
+        result = mongo.db.subjects.insert_one({
             'subject': subject,
             'occurrences': [],
             'manager_id': manager_id
         })
+
+        subject_id = result.inserted_id
+
+        mongo.db.users.update_one(
+            {"_id": ObjectId(manager_id)},
+            {"$push": {"subjects": subject_id}}
+        )
+
         flash('Disciplina cadastrada com sucesso!', 'success')
         return redirect(url_for('manager.index_route'))
 
     return render_template('manager/register_subject.html', form=form)
 
 
-@manager_bp.route('/register_student', methods=['GET', 'POST'])
+@manager_bp.route('/register_class', methods=['GET', 'POST'])
 @manager_required
-def register_student():
-    if 'role' not in session or session['role'] != 'manager':
-        flash('Acesso negado.', 'error')
-        return redirect(url_for('login'))
+def register_class():
     manager_id = session.get('userID')
-    form = StudentForm()
     mongo = PyMongo(current_app)
-
-    # Buscar turmas da coleção classes
-    classes = [(str(cls['_id']), cls['classe'])
-               for cls in mongo.db.classes.find({"manager_id": manager_id})]
-
+    user = mongo.db.users.find_one({"_id": ObjectId(manager_id)})
+    classes_ids = user['classes']
+    classes_mongo = [mongo.db.classes.find_one(
+        {"_id": id}) for id in classes_ids]
+    classes = [cls['classe'] for cls in classes_mongo]
+    form = ClassForm()
     form.update_classes(classes)
-
     if form.validate_on_submit():
-        username = form.username.data
-        password = form.password.data
         classe = form.classe.data
 
-        # Hashing da senha
-        hashed_password = bcrypt.hashpw(
-            password.encode('utf-8'), bcrypt.gensalt())
-
-        mongo.db.users.insert_one({
-            'username': username,
-            'password': hashed_password.decode('utf-8'),
+        # Inserir a nova turma no banco de dados
+        result = mongo.db.classes.insert_one({
             'classe': classe,
-            'role': 'student',
-            'manager_id': manager_id,
-            'occurrences': []
+            'occurrences': [],
+            'manager_id': manager_id
         })
-        flash('Estudante cadastrado com sucesso!', 'success')
+
+        classe_id = result.inserted_id
+
+        mongo.db.users.update_one(
+            {"_id": ObjectId(manager_id)},
+            {"$push": {"classes": classe_id}}
+        )
+
+        flash('Turma cadastrada com sucesso!', 'success')
         return redirect(url_for('manager.index_route'))
 
-    return render_template('manager/register_student.html', form=form)
+    return render_template('manager/register_class.html', form=form)
 
 
-@manager_bp.route('/register_teacher', methods=['GET', 'POST'])
-@manager_required
+@ manager_bp.route('/register_teacher', methods=['GET', 'POST'])
+@ manager_required
 def register_teacher():
     if 'role' not in session or session['role'] != 'manager':
         flash('Acesso negado.', 'error')
@@ -120,40 +113,108 @@ def register_teacher():
     form = TeacherForm()
     mongo = PyMongo(current_app)
     manager_id = session.get('userID')
+    user = mongo.db.users.find_one({"_id": ObjectId(manager_id)})
 
-    # Buscar turmas da coleção subjects
-    subjects = [(str(sub['_id']), sub['subject'])
-                for sub in mongo.db.subjects.find({"manager_id": manager_id})]
+    # atualizando disciplinas
+    subjects_ids = user['subjects']
+    subjects_mongo = [mongo.db.subjects.find_one(
+        {"_id": id}) for id in subjects_ids]
+    subjects = [sub['subject'] for sub in subjects_mongo]
     form.update_subjects(subjects)
 
-    # Buscar turmas da coleção classes
-    classes = [(str(cls['_id']), cls['classe'])
-               for cls in mongo.db.classes.find({"manager_id": manager_id})]
+    # atualizando classes
+    classes_ids = user['classes']
+    classes_mongo = [mongo.db.classes.find_one(
+        {"_id": id}) for id in classes_ids]
+    classes = [cls['classe'] for cls in classes_mongo]
     form.update_classes(classes)
 
     if form.validate_on_submit():
         username = form.username.data
+        email = form.email.data
+        confirm_email = form.confirm_email.data
         password = form.password.data
         subjects = form.subjects.data
         classes = form.classes.data
 
-        # Hashing da senha
-        hashed_password = bcrypt.hashpw(
-            password.encode('utf-8'), bcrypt.gensalt())
+        subjects_ids = [sub['_id']
+                        for sub in subjects_mongo if sub['subject'] in subjects]
 
-        mongo.db.users.insert_one({
-            'username': username,
-            'password': hashed_password.decode('utf-8'),
-            'subjects': subjects,
-            'classes': classes,
-            'role': 'teacher',
-            'manager_id': manager_id,
-            'occurrences': []
-        })
-        flash('Professor(a) cadastrado com sucesso!', 'success')
-        return redirect(url_for('manager.index_route'))
+        classes_ids = [cls['_id']
+                       for cls in classes_mongo if cls['classe'] in classes]
+
+        if email != confirm_email:
+            flash('Os emails não coincidem!')
+        else:
+            # Hashing da senha
+            hashed_password = bcrypt.hashpw(
+                password.encode('utf-8'), bcrypt.gensalt())
+
+            mongo.db.users.insert_one({
+                'username': username,
+                'password': hashed_password.decode('utf-8'),
+                'email': email,
+                'subjects': subjects_ids,
+                'classes': classes_ids,
+                'role': 'teacher',
+                'manager_id': manager_id,
+                'occurrences': []
+            })
+            flash('Professor(a) cadastrado com sucesso!', 'success')
+            return redirect(url_for('manager.index_route'))
 
     return render_template('manager/register_teacher.html', form=form)
+
+
+@ manager_bp.route('/register_student', methods=['GET', 'POST'])
+@ manager_required
+def register_student():
+    if 'role' not in session or session['role'] != 'manager':
+        flash('Acesso negado.', 'error')
+        return redirect(url_for('login'))
+    manager_id = session.get('userID')
+    mongo = PyMongo(current_app)
+    user = mongo.db.users.find_one({"_id": ObjectId(manager_id)})
+
+    # atualizando classes
+    classes_ids = user['classes']
+    classes_mongo = [mongo.db.classes.find_one(
+        {"_id": id}) for id in classes_ids]
+    classes = [cls['classe'] for cls in classes_mongo]
+    form = StudentForm()
+    form.update_classes(classes)
+
+    if form.validate_on_submit():
+        username = form.username.data
+        email = form.email.data
+        confirm_email = form.confirm_email.data
+        password = form.password.data
+        classe = form.classe.data
+
+        if email != confirm_email:
+            flash('Os emails não coincidem!')
+        else:
+            # Hashing da senha
+            hashed_password = bcrypt.hashpw(
+                password.encode('utf-8'), bcrypt.gensalt())
+
+            classe_id = [
+                cls['_id'] for cls in classes_mongo if cls['classe'] == classe
+            ]
+
+            mongo.db.users.insert_one({
+                'username': username,
+                'email': email,
+                'password': hashed_password.decode('utf-8'),
+                'classe': classe_id,
+                'role': 'student',
+                'manager_id': manager_id,
+                'occurrences': []
+            })
+            flash('Estudante cadastrado com sucesso!', 'success')
+            return redirect(url_for('manager.index_route'))
+
+    return render_template('manager/register_student.html', form=form)
 
 
 @ manager_bp.route('/register_occurrence', methods=['GET', 'POST'])
@@ -181,35 +242,48 @@ def search_occurrences_route():
 
 
 @ manager_bp.route('/manager_occurrence/delete/<string:id>', methods=['POST'])
-@manager_required
+@ manager_required
 def delete_occurrence_route(id):
     return delete_occurrence(id)
 
 
 @ manager_bp.route('/manager_occurrence/update/<string:field>/<string:occurrence_id>', methods=['POST'])
-@manager_required
+@ manager_required
 def update_occurrence_field_route(field, occurrence_id):
     return update_field(field, occurrence_id)
 
 
-@manager_bp.route('/manager/configurations')
-@manager_required
-def manager_configurations():
+@ manager_bp.route('/configurations')
+@ manager_required
+def configurations_route():
     return configurations()
 
 
-@manager_bp.route('/manager/configurations/change_password')
-@manager_required
+@ manager_bp.route('/profile_info')
+@ manager_required
+def profile_info_route():
+    return profile_info()
+
+
+@ manager_bp.route('/configurations/password')
+@ manager_required
 def change_password_form():
     return password_form_route()
 
 
-@manager_bp.route('/manager/configurations/change_password', methods=['POST'])
-@manager_required
+@ manager_bp.route('/configurations/password/change', methods=['POST'])
+@ manager_required
 def changing_password_route():
     return changing_password()
 
 
-@manager_bp.route('/manager/configurations/change_email')
+@ manager_bp.route('/configurations/email')
+@ manager_required
 def change_email_form():
     return email_form_route()
+
+
+@ manager_bp.route('/configurations/email/change', methods=['POST'])
+@ manager_required
+def changing_email_route():
+    return changing_email()

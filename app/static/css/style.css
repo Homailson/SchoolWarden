@@ -5,6 +5,41 @@ h2 {
     margin-bottom: 10px;
 }
 
+.container {
+    margin-top: 1rem;
+}
+
+.sidebar {
+    background-color: #f8f9fa;
+    border: 1px solid #eaeaea;
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+.nav.flex-column.active {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+
+.toggle-menu {
+    display: none;
+}
+
+@media (max-width: 992px) {
+    .nav.flex-column {
+        display: none;
+    }
+
+    .toggle-menu {
+        display: inline-flex;
+    }
+
+    .main-content {
+        margin-top: 1rem;
+    }
+}
+
 .navbar-nav {
     text-align: center;
 }
@@ -25,6 +60,10 @@ h2 {
     max-width: 400px;
     padding: 15px;
     margin: auto;
+}
+
+.form-signin a {
+    text-decoration: none;
 }
 
 .form-floating {
@@ -407,3 +446,16 @@ select {
     transition: transform 0.3s ease;
     /* adiciona uma transição suave para a rotação */
 }
+
+
+/* Estilos para Informações do perfil */
+
+.profile_info h2 {
+    margin-bottom: 2rem;
+}
+
+/* .profile_info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+} */

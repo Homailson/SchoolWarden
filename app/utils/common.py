@@ -47,11 +47,11 @@ def occurrence_submission(role):
         teacher = mongo.db.users.find_one({"_id": ObjectId(userID)})
         teacher_classes = teacher['classes']
         classes = [mongo.db.classes.find_one(
-            {"_id": ObjectId(cls_id)}) for cls_id in teacher_classes]
+            {"_id": cls_id}) for cls_id in teacher_classes]
         teachers = [teacher]
         teacher_subjects = teacher['subjects']
         subjects = [mongo.db.subjects.find_one(
-            {"_id": ObjectId(sub_id)}) for sub_id in teacher_subjects]
+            {"_id": sub_id}) for sub_id in teacher_subjects]
         manager_id = teacher['manager_id']
 
     # Atualizar as opções do formulário
@@ -69,8 +69,6 @@ def occurrence_submission(role):
         subject_id = form.subject.data
         classification = form.classification.data
         description = sanitize_description(form.description.data)
-
-        print("ID do estudante: ", student_id)
 
         if student_id == "None":
             flash('Por favor, selecione um aluno válido.', 'error')
@@ -117,7 +115,7 @@ def occurrence_submission(role):
             {"$push": {"occurrences": occurrence_id}}
         )
 
-        flash('Ocorrência cadastrada com sucesso!', 'success')
+        flash('Ocorrência registrada com sucesso!', 'success')
         return redirect(url_for(f'{role}.index_route'))
     endpoint = f'{role}.register_occurrence'
     return render_template('common/register_occurrence.html', form=form, endpoint=endpoint)
@@ -127,18 +125,22 @@ def search_students():
     mongo = PyMongo(current_app)
     userID = session.get('userID')
     user = mongo.db.users.find_one({"_id": ObjectId(userID)})
+    search_term = request.args.get('q', '')
     if user['role'] == 'manager':
         manager_id = userID
+        students = list(mongo.db.users.find(
+            {'role': 'student',
+             'username': {'$regex': search_term, '$options': 'i'},
+             'manager_id': manager_id})
+        )
     else:
-        manager_id = user['manager_id'
-                          ]
-    search_term = request.args.get('q', '')
+        teacher_classes = user['classes']
+        students = list(mongo.db.users.find(
+            {'role': 'student',
+             'username': {'$regex': search_term, '$options': 'i'},
+             'classe': {"$in": teacher_classes}})
+        )
 
-    students = list(mongo.db.users.find(
-        {'role': 'student',
-         'username': {'$regex': search_term, '$options': 'i'},
-         'manager_id': manager_id})
-    )
     return jsonify([{'id': str(student['_id']), 'text': student['username']} for student in students])
 
 
@@ -149,6 +151,15 @@ def get_users_by_id(ids):
         user = mongo.db.users.find_one({"_id": ObjectId(user_id)})
         users.append(user)
     return users
+
+
+def get_classes_by_id(ids):
+    classes = []
+    mongo = PyMongo(current_app)
+    for cls_id in ids:
+        classe = mongo.db.classes.find_one({"_id": ObjectId(cls_id)})
+        classes.append(classe)
+    return classes
 
 
 def manager_occurrence():
@@ -229,10 +240,12 @@ def search_occurrences():
     # IDs de professores e alunos envolvidos nas ocorrências
     teachers_ids = [occurrence['teacher_id'] for occurrence in occurrences]
     students_ids = [occurrence['student_id'] for occurrence in occurrences]
+    classes_ids = [occurrence['class_id'] for occurrence in occurrences]
 
     # Detalhes dos professores e alunos
     teachers = get_users_by_id(teachers_ids)
     students = get_users_by_id(students_ids)
+    classes = get_classes_by_id(classes_ids)
 
     # Formatação dos dados das ocorrências para retorno como JSON
     occurrences_data = []
@@ -241,6 +254,7 @@ def search_occurrences():
             'id': str(occurrence['_id']),
             'teacher': teachers[i]['username'],
             'student': students[i]['username'],
+            'classe': classes[i]['classe'],
             'classification': occurrence['classification'],
             'status': occurrence['status'],
             'description': occurrence['description'],
@@ -326,8 +340,44 @@ def update_field(field, occurrence_id):
 
 
 def configurations():
+    mongo = PyMongo(current_app)
+    userID = session.get('userID')
     role = session.get('role')
-    return render_template('/common/configbase.html', role=role)
+    user = mongo.db.users.find_one({"_id": ObjectId(userID)})
+    username = user['username']
+    email = user['email']
+    if role != 'admin':
+        manager_id = user['_id'] if user['role'] == 'manager' else user['manager_id']
+        manager = mongo.db.users.find_one({'_id': ObjectId(manager_id)})
+        school = manager['school']
+    else:
+        school = 'Sem definição'
+    return render_template('/common/configbase.html',
+                           role=role,
+                           username=username,
+                           school=school,
+                           email=email
+                           )
+
+
+def profile_info():
+    mongo = PyMongo(current_app)
+    userID = session.get('userID')
+    role = session.get('role')
+    user = mongo.db.users.find_one({"_id": ObjectId(userID)})
+    username = user['username']
+    email = user['email']
+    if role != 'admin':
+        manager_id = user['_id'] if user['role'] == 'manager' else user['manager_id']
+        manager = mongo.db.users.find_one({'_id': ObjectId(manager_id)})
+        school = manager['school']
+    else:
+        school = 'Sem definição'
+    return render_template('/common/profile_info.html',
+                           role=role,
+                           username=username,
+                           school=school,
+                           email=email)
 
 
 def password_form_route():
@@ -354,12 +404,39 @@ def changing_password():
                     {"$set": {"password": hashed_password.decode('utf-8')}}
                 )
                 flash('Sua senha foi alterada com sucesso!')
+                return redirect(url_for(f'{role}.configurations_route'))
             else:
                 flash('Senha atual inserida não corresponde', 'error')
-    return redirect(url_for(f'{role}.manager_configurations'))
+    return redirect(url_for(f'{role}.configurations_route'))
 
 
 def email_form_route():
     form = ChangeEmailForm()
     role = session['role']
     return render_template('/common/change_email.html', form=form, role=role)
+
+
+def changing_email():
+    mongo = PyMongo(current_app)
+    form = ChangeEmailForm()
+    role = session['role']
+    if form.validate_on_submit():
+        userID = session.get('userID')
+        user = mongo.db.users.find_one({"_id": ObjectId(userID)})
+        if user and 'email' in user:
+            new_email = form.new_email.data
+            confirm_email = form.confirm_email.data
+            if new_email != confirm_email:
+                flash('Os emails não coincidem!')
+            else:
+                mongo.db.users.update_one(
+                    {"_id": ObjectId(userID)},
+                    {"$set": {"email": new_email}}
+                )
+                flash('Seu e-mail foi alterado com sucesso!')
+                return redirect(url_for(f'{role}.configurations_route'))
+        else:
+            flash('Este usuário não tem e-mail')
+    else:
+        flash('Os emails não coincidem!')
+    return redirect(url_for(f'{role}.configurations_route'))
