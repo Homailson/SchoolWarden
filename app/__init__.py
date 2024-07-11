@@ -18,8 +18,8 @@ def create_app():
     app.config['MAIL_SERVER'] = 'smtp.gmail.com'
     app.config['MAIL_PORT'] = 587
     app.config['MAIL_USE_TLS'] = True
-    app.config['MAIL_USERNAME'] = 'homailson@gmail.com'
-    app.config['MAIL_PASSWORD'] = 'arqdgjadbuizeize'
+    app.config['MAIL_USERNAME'] = ''
+    app.config['MAIL_PASSWORD'] = ''
 
     # Initialize PyMongo with the app
     mongo.init_app(app, app.config['MONGO_URI'])
