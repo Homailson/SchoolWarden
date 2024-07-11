@@ -302,3 +302,30 @@ class ChangePasswordForm(FlaskForm):
         ]
     )
     submit = SubmitField('Alterar')
+
+
+class ResetPasswordRequestForm(FlaskForm):
+    email = EmailField(
+        'E-mail',
+        validators=[
+            DataRequired()
+        ]
+    )
+    submit = SubmitField('Solicitar redefinição de senha')
+
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField(
+        'Nova senha',
+        validators=[
+            DataRequired(),
+        ]
+    )
+    confirm_password = PasswordField(
+        'Nova senha',
+        validators=[
+            DataRequired(),
+            EqualTo('password')
+        ]
+    )
+    submit = SubmitField('Redefinir senha')

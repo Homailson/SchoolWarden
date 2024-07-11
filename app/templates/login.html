@@ -17,7 +17,7 @@
             autocomplete="current-password") }}
             <label for="password">{{ form.password.label }}</label>
         </div>
-        <a href="#">Esqueceu a senha ?</a>
+        <a href="{{url_for('reset_password_request')}}">Esqueceu a senha ?</a>
         <button class="w-100 btn btn-lg btn-dark mt-3" type="submit">Entrar</button>
     </form>
 </main>

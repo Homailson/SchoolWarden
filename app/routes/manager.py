@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app
+from flask import Blueprint, render_template, redirect, url_for, flash, session, current_app
 from app.decorators import manager_required
 from app.forms import ClassForm
 from app.forms import SubjectForm

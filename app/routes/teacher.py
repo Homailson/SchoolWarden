@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, session
+from flask import Blueprint
 from app.decorators import teacher_required
 from app.utils.common import (
     index,

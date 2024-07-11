@@ -1,8 +1,10 @@
 from flask import Flask, render_template, redirect, url_for, flash, session
+from flask_mail import Mail, Message
+from itsdangerous import URLSafeTimedSerializer
 from flask_pymongo import PyMongo
 from flask_wtf import CSRFProtect
 from config import Config
-from app.forms import LoginForm
+from app.forms import LoginForm, ResetPasswordRequestForm, ResetPasswordForm
 import bcrypt
 import secrets
 
@@ -13,6 +15,11 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     app.config["SECRET_KEY"] = secrets.token_urlsafe(32)
+    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+    app.config['MAIL_PORT'] = 587
+    app.config['MAIL_USE_TLS'] = True
+    app.config['MAIL_USERNAME'] = 'homailson@gmail.com'
+    app.config['MAIL_PASSWORD'] = 'arqdgjadbuizeize'
 
     # Initialize PyMongo with the app
     mongo.init_app(app, app.config['MONGO_URI'])
@@ -94,5 +101,48 @@ def create_app():
         else:
             flash('Você já está deslogado', 'info')
         return redirect(url_for('main.index'))
+
+    mail = Mail(app)
+    s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+
+    @app.route('/reset_password_request', methods=['GET', 'POST'])
+    def reset_password_request():
+        form = ResetPasswordRequestForm()
+        print("iniciando função")
+        if form.validate_on_submit():
+            email = form.email.data
+            user = mongo.db.users.find_one({"email": email})
+            print("validado")
+            if user:
+                token = s.dumps(email, salt='password-reset-salt')
+                reset_url = url_for(
+                    'reset_password', token=token, _external=True)
+                msg = Message('Redefinir Senha',
+                              sender='noreply@example.com', recipients=[email])
+                msg.body = f'Para redefinir sua senha, clique no link a seguir: {reset_url}'
+                mail.send(msg)
+                flash(
+                    'Um e-mail com instruções para redefinir sua senha foi enviado.', 'info')
+        print("usuario não existe")
+        return render_template('common/reset_password_request.html', form=form)
+
+    @app.route('/reset_password/<token>', methods=['GET', 'POST'])
+    def reset_password(token):
+        try:
+            email = s.loads(token, salt='password-reset-salt', max_age=3600)
+        except:
+            flash('O link de redefinição de senha é inválido ou expirou.', 'warning')
+            return redirect(url_for('reset_password_request'))
+        form = ResetPasswordForm()
+        if form.validate_on_submit():
+            mongo = PyMongo(app)
+            password = form.password.data
+            hashed_password = bcrypt.hashpw(
+                password.encode('utf-8'), bcrypt.gensalt())
+            mongo.db.users.update_one(
+                {"email": email}, {"$set": {"password": hashed_password.decode('utf-8')}})
+            flash('Sua senha foi redefinida com sucesso!', 'success')
+            return redirect(url_for('login'))
+        return render_template('common/reset_password.html', form=form)
 
     return app
