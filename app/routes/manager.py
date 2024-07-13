@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, session, current_app
+from flask import Blueprint, render_template, redirect, url_for, flash, session, current_app, jsonify
 from app.decorators import manager_required
 from app.forms import ClassForm
 from app.forms import SubjectForm
@@ -287,3 +287,25 @@ def change_email_form():
 @ manager_required
 def changing_email_route():
     return changing_email()
+
+
+@manager_bp.route('/api/pending_occurrences_count', methods=['GET'])
+@manager_required
+def pending_occurrences_count():
+    mongo = PyMongo(current_app)
+    role = session.get('role')
+    if role == 'manager':
+        manager_id = session.get('userID')
+        # Encontre as ocorrências pendentes para o gerente específico
+        pending_occurrences = list(
+            mongo.db.occurrences.find(
+                {"manager_id": manager_id,
+                 "status": "pendente"}
+            )
+        )
+        # Conte o número de ocorrências pendentes
+        pending_counting = len(pending_occurrences)
+    else:
+        pending_counting = 0
+
+    return jsonify({'pending_count': pending_counting})

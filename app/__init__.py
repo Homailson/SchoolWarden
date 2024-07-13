@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, flash, session
+from flask import Flask, render_template, redirect, url_for, flash, session, jsonify
 from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
 from flask_pymongo import PyMongo
@@ -18,7 +18,7 @@ def create_app():
 
     # Initialize PyMongo with the app
     mongo_uri = os.getenv('MONGO_URI')
-    mongo.init_app(app, uri=mongo_uri, tlsCAFile=certifi.where())
+    mongo.init_app(app, mongo_uri)
 
     # Initialize CSRF protection
     csrf = CSRFProtect(app)
@@ -65,6 +65,7 @@ def create_app():
                 hashed_password = user['password'].encode(
                     'utf-8')  # Encode hashed password to bytes
                 if bcrypt.checkpw(password, hashed_password):
+                    session.permanent = True
                     session['role'] = user['role']
                     session['username'] = user['username']
                     session['email'] = user['email']
@@ -140,5 +141,9 @@ def create_app():
             flash('Sua senha foi redefinida com sucesso!', 'success')
             return redirect(url_for('login'))
         return render_template('common/reset_password.html', form=form)
+
+    @app.before_request
+    def update_session_activity():
+        session.modified = True
 
     return app

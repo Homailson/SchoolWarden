@@ -14,19 +14,92 @@
 {% macro render_links(role, register_endpoint, manager_endpoint) %}
 <div class="vertical-menu">
     {% if role == 'manager' %}
-    <a href="{{ url_for('manager.register_subject') }}" class="btn btn-dark btn-block mb-2">Cadastrar disciplina</a>
-    <a href="{{ url_for('manager.register_class') }}" class="btn btn-dark btn-block mb-2">Cadastrar turma</a>
-    <a href="{{ url_for('manager.register_teacher') }}" class="btn btn-dark btn-block mb-2">Cadastrar professor</a>
-    <a href="{{ url_for('manager.register_student') }}" class="btn btn-dark btn-block mb-2">Cadastrar estudante</a>
-    <a href="{{ url_for(register_endpoint) }}" class="btn btn-dark btn-block mb-2">Registrar ocorrência</a>
-    <a href="{{ url_for(manager_endpoint) }}" class="btn btn-dark btn-block mb-2">Gerir ocorrências</a>
+    <div class="card-deck">
+        <div class="card mb-3">
+            <img src="{{ url_for('static', filename='img/manage_occurrences.svg') }}" class="card-img-top"
+                alt="Gerir Ocorrências" style="width: 60px; height: 60px;">
+            <div class="card-body">
+                <h5 class="card-title">Gerir Ocorrências</h5>
+                <a href="{{ url_for(manager_endpoint) }}" class="btn btn-dark btn-block">Ir</a>
+            </div>
+        </div>
+        <div class="card mb-3">
+            <img src="{{ url_for('static', filename='img/subjects.svg') }}" class="card-img-top"
+                alt="Cadastrar Disciplina" style="width: 50px; height: 50px;">
+            <div class="card-body">
+                <h5 class="card-title">Cadastrar Disciplina</h5>
+                <a href="{{ url_for('manager.register_subject') }}" class="btn btn-dark btn-block">Ir</a>
+            </div>
+        </div>
+        <div class="card mb-3">
+            <img src="{{ url_for('static', filename='img/classes.svg') }}" class="card-img-top" alt="Cadastrar Turma"
+                style="width: 50px; height: 50px;">
+            <div class=" card-body">
+                <h5 class="card-title">Cadastrar Turma</h5>
+                <a href="{{ url_for('manager.register_class') }}" class="btn btn-dark btn-block">Ir</a>
+            </div>
+        </div>
+        <div class="card mb-3">
+            <img src="{{ url_for('static', filename='img/teachers.svg') }}" class="card-img-top"
+                alt="Cadastrar Professor" style="width: 50px; height: 50px;">
+            <div class="card-body">
+                <h5 class="card-title">Cadastrar Professor</h5>
+                <a href="{{ url_for('manager.register_teacher') }}" class="btn btn-dark btn-block">Ir</a>
+            </div>
+        </div>
+        <div class="card mb-3">
+            <img src="{{ url_for('static', filename='img/students.svg') }}" class="card-img-top"
+                alt="Cadastrar Estudante" style="width: 60px; height: 60px;">
+            <div class="card-body">
+                <h5 class="card-title">Cadastrar Estudante</h5>
+                <a href="{{ url_for('manager.register_student') }}" class="btn btn-dark btn-block">Ir</a>
+            </div>
+        </div>
+        <div class="card mb-3">
+            <img src="{{ url_for('static', filename='img/write_occurrence.svg') }}" class="card-img-top"
+                alt="Registrar Ocorrência" style="width: 60px; height: 60px;">
+            <div class="card-body">
+                <h5 class="card-title">Registrar Ocorrência</h5>
+                <a href="{{ url_for(register_endpoint) }}" class="btn btn-dark btn-block">Ir</a>
+            </div>
+        </div>
+    </div>
+
     {% elif role == 'teacher' %}
-    <a href="{{ url_for(register_endpoint) }}" class="btn btn-dark btn-block mb-2">Registrar ocorrência</a>
-    <a href="{{ url_for(manager_endpoint) }}" class="btn btn-dark btn-block mb-2">Gerir ocorrências</a>
+    <div class="card mb-3">
+        <img src="{{ url_for('static', filename='img/write_occurrence.svg') }}" class="card-img-top"
+            alt="Registrar Ocorrência" style="width: 60px; height: 60px;">
+        <div class="card-body">
+            <h5 class="card-title">Registrar Ocorrência</h5>
+            <a href="{{ url_for(register_endpoint) }}" class="btn btn-dark btn-block">Ir</a>
+        </div>
+    </div>
+    <div class="card mb-3">
+        <img src="{{ url_for('static', filename='img/manage_occurrences.svg') }}" class="card-img-top"
+            alt="Gerir Ocorrências" style="width: 60px; height: 60px;">
+        <div class="card-body">
+            <h5 class="card-title">Gerir Ocorrências</h5>
+            <a href="{{ url_for(manager_endpoint) }}" class="btn btn-dark btn-block">Ir</a>
+        </div>
+    </div>
     {% elif role == 'student' %}
-    <a href="{{ url_for(manager_endpoint) }}" class="btn btn-dark btn-block mb-2">Minhas ocorrências</a>
+    <div class="card mb-3">
+        <img src="{{ url_for('static', filename='img/manage_occurrences.svg') }}" class="card-img-top"
+            alt="Gerir Ocorrências" style="width: 60px; height: 60px;">
+        <div class="card-body">
+            <h5 class="card-title">Minhas Ocorrências</h5>
+            <a href="{{ url_for(manager_endpoint) }}" class="btn btn-dark btn-block">Ir</a>
+        </div>
+    </div>
     {% else %}
-    <a href="{{ url_for('admin.register_manager') }}" class="btn btn-dark btn-block mb-2">Cadastrar Gestor</a>
+    <div class="card mb-3">
+        <img src="{{ url_for('static', filename='img/managers.svg') }}" class="card-img-top" alt="Cadastrar Gestor"
+            style="width: 60px; height: 60px;">
+        <div class="card-body d-flex flex-column justify-content-center">
+            <h5 class="card-title">Cadastrar Gestor</h5>
+            <a href="{{ url_for('admin.register_manager') }}" class="btn btn-dark btn-block mt-auto">Ir</a>
+        </div>
+    </div>
     {% endif %}
 </div>
 

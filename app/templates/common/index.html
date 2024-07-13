@@ -15,6 +15,6 @@
 {% block content %}
 {% from 'macros.html' import render_greeting, render_links %}
 {{ render_greeting(role, username) }}
-{{ render_links(role, register_endpoint, manager_endpoint) }}
 <!-- Conteúdo específico para a página de gestão -->
+{{ render_links(role, register_endpoint, manager_endpoint) }}
 {% endblock %}
