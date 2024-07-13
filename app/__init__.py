@@ -1,4 +1,11 @@
-from flask import Flask, render_template, redirect, url_for, flash, session, jsonify
+from flask import (
+    Flask,
+    render_template,
+    redirect,
+    url_for,
+    flash,
+    session
+)
 from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
 from flask_pymongo import PyMongo

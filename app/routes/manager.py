@@ -4,7 +4,7 @@ from app.forms import ClassForm
 from app.forms import SubjectForm
 from app.forms import StudentForm
 from app.forms import TeacherForm
-from flask_pymongo import PyMongo
+from app import mongo
 from bson.objectid import ObjectId
 from app.utils.common import (
     index,
@@ -19,7 +19,8 @@ from app.utils.common import (
     changing_password,
     email_form_route,
     changing_email,
-    profile_info
+    profile_info,
+    generate_pdf
 )
 import bcrypt
 
@@ -36,7 +37,6 @@ def index_route():
 @manager_required
 def register_subject():
     manager_id = session.get('userID')
-    mongo = PyMongo(current_app)
     user = mongo.db.users.find_one({"_id": ObjectId(manager_id)})
     subjects_ids = user['subjects']
     subjects_mongo = [mongo.db.subjects.find_one(
@@ -72,7 +72,6 @@ def register_subject():
 @manager_required
 def register_class():
     manager_id = session.get('userID')
-    mongo = PyMongo(current_app)
     user = mongo.db.users.find_one({"_id": ObjectId(manager_id)})
     classes_ids = user['classes']
     classes_mongo = [mongo.db.classes.find_one(
@@ -111,7 +110,6 @@ def register_teacher():
         return redirect(url_for('login'))
 
     form = TeacherForm()
-    mongo = PyMongo(current_app)
     manager_id = session.get('userID')
     user = mongo.db.users.find_one({"_id": ObjectId(manager_id)})
 
@@ -173,7 +171,6 @@ def register_student():
         flash('Acesso negado.', 'error')
         return redirect(url_for('login'))
     manager_id = session.get('userID')
-    mongo = PyMongo(current_app)
     user = mongo.db.users.find_one({"_id": ObjectId(manager_id)})
 
     # atualizando classes
@@ -292,7 +289,6 @@ def changing_email_route():
 @manager_bp.route('/api/pending_occurrences_count', methods=['GET'])
 @manager_required
 def pending_occurrences_count():
-    mongo = PyMongo(current_app)
     role = session.get('role')
     if role == 'manager':
         manager_id = session.get('userID')
@@ -309,3 +305,9 @@ def pending_occurrences_count():
         pending_counting = 0
 
     return jsonify({'pending_count': pending_counting})
+
+
+@manager_bp.route('/api/generate_pdf', methods=['POST'])
+@manager_required
+def generate_pdf_route():
+    return generate_pdf()

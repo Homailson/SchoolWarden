@@ -13,7 +13,8 @@ from app.utils.common import (
     changing_password,
     email_form_route,
     changing_email,
-    profile_info
+    profile_info,
+    generate_pdf
 )
 
 teacher_bp = Blueprint('teacher', __name__)
@@ -92,3 +93,9 @@ def change_email_form():
 @teacher_required
 def changing_email_route():
     return changing_email()
+
+
+@teacher_bp.route('/api/generate_pdf', methods=['POST'])
+@teacher_required
+def generate_pdf_route():
+    return generate_pdf()

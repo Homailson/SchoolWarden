@@ -1,8 +1,19 @@
-from flask import current_app, flash, redirect, render_template, session, url_for, request, jsonify
-from flask_pymongo import PyMongo
+from flask import (
+    flash, redirect,
+    render_template,
+    session, url_for,
+    request,
+    jsonify,
+    make_response
+)
+
 from datetime import datetime, timezone
 from app.forms import OccurrenceForm, ChangePasswordForm, ChangeEmailForm
+from app import mongo
 from bson.objectid import ObjectId
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from io import BytesIO
 import bcrypt
 
 
@@ -27,7 +38,6 @@ def occurrence_submission(role):
         return redirect(url_for('login'))
 
     form = OccurrenceForm()
-    mongo = PyMongo(current_app)
     manager_id = session.get('userID')
 
     teachers = []
@@ -122,7 +132,6 @@ def occurrence_submission(role):
 
 
 def search_students():
-    mongo = PyMongo(current_app)
     userID = session.get('userID')
     user = mongo.db.users.find_one({"_id": ObjectId(userID)})
     search_term = request.args.get('q', '')
@@ -146,7 +155,6 @@ def search_students():
 
 def get_users_by_id(ids):
     users = []
-    mongo = PyMongo(current_app)
     for user_id in ids:
         user = mongo.db.users.find_one({"_id": ObjectId(user_id)})
         users.append(user)
@@ -155,7 +163,6 @@ def get_users_by_id(ids):
 
 def get_classes_by_id(ids):
     classes = []
-    mongo = PyMongo(current_app)
     for cls_id in ids:
         classe = mongo.db.classes.find_one({"_id": ObjectId(cls_id)})
         classes.append(classe)
@@ -172,7 +179,6 @@ def manager_occurrence():
 
 def search_occurrences():
     # Parâmetros da requisição
-    mongo = PyMongo(current_app)
     query = request.args.get('query', '').strip()
     start_date = request.args.get('start_date', '').strip()
     end_date = request.args.get('end_date', '').strip()
@@ -202,8 +208,6 @@ def search_occurrences():
 
     # Condições de busca baseadas na query de pesquisa
     if query:
-        mongo = PyMongo(current_app)
-
         # Busca por IDs de usuários com base no username
         users = mongo.db.users.find(
             {'username': {'$regex': query, '$options': 'i'}})
@@ -226,9 +230,6 @@ def search_occurrences():
     # Adiciona filtro por status pendente, se aplicável
     if request.args.get('status') == 'pending':
         search_filter['status'] = 'pendente'
-
-    # Conexão com o MongoDB
-    mongo = PyMongo(current_app)
 
     # Contagem total de ocorrências que correspondem ao filtro
     total_occurrences = mongo.db.occurrences.count_documents(search_filter)
@@ -274,7 +275,6 @@ def search_occurrences():
 
 
 def delete_occurrence(id):
-    mongo = PyMongo(current_app)
 
     # Delete the occurrence from the occurrences collection
     result = mongo.db.occurrences.delete_one({'_id': ObjectId(id)})
@@ -302,7 +302,6 @@ def delete_occurrence(id):
 
 
 def update_field(field, occurrence_id):
-    mongo = PyMongo(current_app)
     data = request.json
     value = sanitize_description(data.get(field))
     if not value:
@@ -340,7 +339,6 @@ def update_field(field, occurrence_id):
 
 
 def configurations():
-    mongo = PyMongo(current_app)
     userID = session.get('userID')
     role = session.get('role')
     user = mongo.db.users.find_one({"_id": ObjectId(userID)})
@@ -361,7 +359,6 @@ def configurations():
 
 
 def profile_info():
-    mongo = PyMongo(current_app)
     userID = session.get('userID')
     role = session.get('role')
     user = mongo.db.users.find_one({"_id": ObjectId(userID)})
@@ -387,7 +384,6 @@ def password_form_route():
 
 
 def changing_password():
-    mongo = PyMongo(current_app)
     form = ChangePasswordForm()
     role = session['role']
     if form.validate_on_submit():
@@ -417,7 +413,6 @@ def email_form_route():
 
 
 def changing_email():
-    mongo = PyMongo(current_app)
     form = ChangeEmailForm()
     role = session['role']
     if form.validate_on_submit():
@@ -440,3 +435,75 @@ def changing_email():
     else:
         flash('Os emails não coincidem!')
     return redirect(url_for(f'{role}.configurations_route'))
+
+
+def generate_pdf():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        occurrence_id = data.get('occurrence_id')
+        if not occurrence_id:
+            return jsonify({'error': 'No occurrence_id provided'}), 400
+
+        occurrence_data = mongo.db.occurrences.find_one(
+            {"_id": ObjectId(occurrence_id)})
+
+        teacher_info = mongo.db.users.find_one(
+            {"_id": ObjectId(occurrence_data['teacher_id'])})
+        teacher = teacher_info['username']
+        manager_info = mongo.db.users.find_one(
+            {"_id": ObjectId(occurrence_data['manager_id'])})
+        manager = manager_info['username']
+        student_info = mongo.db.users.find_one(
+            {"_id": ObjectId(occurrence_data['student_id'])})
+        student = student_info['username']
+        school_info = mongo.db.users.find_one(
+            {"_id": ObjectId(occurrence_data['manager_id'])})
+        school = school_info['school']
+        classe_info = mongo.db.classes.find_one(
+            {"_id": ObjectId(occurrence_data['class_id'])})
+        classe = classe_info['classe']
+        subject_info = mongo.db.subjects.find_one(
+            {"_id": ObjectId(occurrence_data['subject_id'])})
+        subject = subject_info['subject']
+        date = occurrence_data['date']
+        description = occurrence_data['description']
+
+        occurrence = {
+            "teacher": teacher,
+            "student": student,
+            "manager": manager,
+            "school": school,
+            "classe": classe,
+            "subject": subject,
+            "date": date.strftime("%d/%m/%Y"),
+            "description": description
+        }
+
+        # Gerar o PDF
+        pdf_buffer = BytesIO()
+        generate_pdf_file(pdf_buffer, occurrence)
+        pdf_buffer.seek(0)
+
+        # Retornar o PDF como resposta
+        response = make_response(pdf_buffer.getvalue())
+        response.headers['Content-Disposition'] = 'inline; filename=relatorio.pdf'
+        response.headers['Content-Type'] = 'application/pdf'
+        return response
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+def generate_pdf_file(filename, occurrence):
+    c = canvas.Canvas(filename, pagesize=letter)
+    c.drawString(100, 720, f"Escola: {occurrence['school']}")
+    c.drawString(100, 700, f"Gestor(a): {occurrence['manager']}")
+    c.drawString(100, 680, f"Data: {occurrence['date']}")
+    c.drawString(100, 660, f"Professor(a): {occurrence['teacher']}")
+    c.drawString(100, 640, f"Disciplina: {occurrence['subject']}")
+    c.drawString(100, 620, f"Aluno(a): {occurrence['student']}")
+    c.drawString(100, 600, f"Descrição: {occurrence['description']}")
+    c.drawString(100, 580, f"Turma: {occurrence['classe']}")
+    c.save()

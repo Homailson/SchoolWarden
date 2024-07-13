@@ -10,7 +10,7 @@ from app.utils.common import (
     changing_email,
     profile_info
 )
-from flask_pymongo import PyMongo
+from app import mongo
 import bcrypt
 
 admin_bp = Blueprint('admin', __name__)
@@ -43,8 +43,6 @@ def register_manager():
             # Hashing da senha
             hashed_password = bcrypt.hashpw(
                 password.encode('utf-8'), bcrypt.gensalt())
-
-            mongo = PyMongo(current_app)
 
             # Inserir o novo gestor no banco de dados
             mongo.db.users.insert_one({
