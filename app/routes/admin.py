@@ -36,6 +36,7 @@ def register_manager():
         school = form.school.data
         email = form.email.data
         confirm_email = form.confirm_email.data
+        logo_url = form.logo_url.data
         if email != confirm_email:
             flash('As senhas não coincidem!')
             return redirect(url_for('admin.register_manager'))
@@ -50,6 +51,7 @@ def register_manager():
                 'email': email,
                 'password': hashed_password.decode('utf-8'),
                 'school': school,
+                'logo_url': logo_url,
                 'occurrences': [],
                 'subjects': [],
                 'classes': [],

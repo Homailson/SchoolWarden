@@ -112,6 +112,10 @@ class ManagerForm(FlaskForm):
             Length(max=64)
         ]
     )
+
+    logo_url = StringField(
+        'Logo da escola'
+    )
     submit = SubmitField('Cadastrar')
 
 

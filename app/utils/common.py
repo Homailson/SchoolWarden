@@ -11,9 +11,14 @@ from datetime import datetime, timezone
 from app.forms import OccurrenceForm, ChangePasswordForm, ChangeEmailForm
 from app import mongo
 from bson.objectid import ObjectId
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import inch
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import Paragraph, Spacer, Frame, PageTemplate, Image, BaseDocTemplate, Table
+from reportlab.graphics.shapes import Drawing, Line
+from reportlab.lib.colors import black
 from io import BytesIO
+import requests
 import bcrypt
 
 
@@ -462,6 +467,7 @@ def generate_pdf():
         school_info = mongo.db.users.find_one(
             {"_id": ObjectId(occurrence_data['manager_id'])})
         school = school_info['school']
+        school_logo = school_info['logo_url']
         classe_info = mongo.db.classes.find_one(
             {"_id": ObjectId(occurrence_data['class_id'])})
         classe = classe_info['classe']
@@ -476,6 +482,7 @@ def generate_pdf():
             "student": student,
             "manager": manager,
             "school": school,
+            "school_logo": school_logo,
             "classe": classe,
             "subject": subject,
             "date": date.strftime("%d/%m/%Y"),
@@ -496,14 +503,120 @@ def generate_pdf():
         return jsonify({'error': str(e)}), 500
 
 
-def generate_pdf_file(filename, occurrence):
-    c = canvas.Canvas(filename, pagesize=letter)
-    c.drawString(100, 720, f"Escola: {occurrence['school']}")
-    c.drawString(100, 700, f"Gestor(a): {occurrence['manager']}")
-    c.drawString(100, 680, f"Data: {occurrence['date']}")
-    c.drawString(100, 660, f"Professor(a): {occurrence['teacher']}")
-    c.drawString(100, 640, f"Disciplina: {occurrence['subject']}")
-    c.drawString(100, 620, f"Aluno(a): {occurrence['student']}")
-    c.drawString(100, 600, f"Descrição: {occurrence['description']}")
-    c.drawString(100, 580, f"Turma: {occurrence['classe']}")
-    c.save()
+def generate_pdf_file(buffer, occurrence):
+    # Configuração do tamanho da página e elementos
+    doc = BaseDocTemplate(buffer, pagesize=A4)
+    styles = getSampleStyleSheet()
+    normal_style = styles['BodyText']
+
+    normal_style = ParagraphStyle(
+        name="NewNormal",
+        parent=styles["Normal"],
+        fontSize=12,
+        spaceAfter=10,
+        leading=16,
+        textColor=black,
+    )
+
+    header_style = ParagraphStyle(
+        name='HeaderStyle',
+        parent=styles['Normal'],  # Pode ser baseado em outro estilo existente
+        fontSize=12,
+        leading=16,  # Espaçamento entre linhas
+        spaceAfter=10,  # Espaçamento após o parágrafo
+        textColor=black,  # Cor do texto
+        # Alinhamento centralizado (0=esquerda, 1=centro, 2=direita)
+        alignment=1,
+        spaceBefore=5,  # Espaçamento antes do parágrafo
+        leftIndent=10,  # Recuo à esquerda
+        rightIndent=10,  # Recuo à direita
+    )
+
+    # Definição de um único frame que cobre toda a página
+    frame_width, frame_height = A4
+    full_frame = Frame(inch, 0, frame_width - 2*inch, frame_height - 0.30*inch)
+
+    # Definição do template de página com o frame único
+    doc.addPageTemplates(PageTemplate(id='full_page', frames=full_frame))
+
+    # Função para baixar a imagem do Google Drive
+    def download_image_from_drive(url):
+        file_id = url.split('/')[-2]
+        download_url = f'https://drive.google.com/uc?id={file_id}'
+
+        response = requests.get(download_url)
+        if response.status_code == 200:
+            return BytesIO(response.content)
+        else:
+            print('Falha ao baixar a imagem')
+            return None
+
+    img_url = occurrence['school_logo']
+
+    if img_url:
+        img_data = download_image_from_drive(img_url)
+        header_image = Image(img_data, width=1*inch,
+                             height=0.75*inch, hAlign="RIGHT")
+    else:
+        print("A imagem não foi carregada!")
+        header_image = None
+
+    # Conteúdo para o cabeçalho
+    header_paragraph = Paragraph(
+        f"<b>Escola:</b> {occurrence['school']}<br/>\
+        <b>Gestor(a):</b> {occurrence['manager']}<br/>\
+        <b>Data:</b> {occurrence['date']}",
+        style=header_style)
+
+    # Header table com header paragraph e header image
+    header_table = Table([[header_paragraph, header_image]], colWidths=[
+                         frame_width*0.50-inch, frame_width*0.50-inch])
+
+    header_table.setStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('ALIGN', (-1, -1), (-1, -1), 'RIGHT'),
+    ])
+
+    # Conteúdo do corpo
+    body_content = [
+        ("Professor(a):", occurrence['teacher']),
+        ("Disciplina:", occurrence['subject']),
+        ("Aluno(a):", occurrence['student']),
+        ("Turma:", occurrence['classe']),
+        ("Descrição:", occurrence['description'])
+    ]
+
+    manager_signature = Paragraph("Assinatura do(a) gestor(a)<br/><br/>\
+        ______________________________", normal_style)
+
+    tutor_signature = Paragraph("Assinatura do(a) responsável<br/><br/>\
+        ______________________________", normal_style)
+
+    footer_table = Table([[manager_signature, tutor_signature]], colWidths=[
+                         frame_width*0.50-inch, frame_width*0.50-inch])
+
+    # Adicionando elementos ao documento
+    elements = []
+
+    elements.append(header_table)
+    # Espaçamento entre cabeçalho e linha
+    elements.append(Spacer(1, 0.15*inch))
+
+    # Adicionar linha horizontal
+    drawing = Drawing(frame_width, 1)
+    line = Line(0, 0, frame_width-2*inch, 0)
+    drawing.add(line)
+    elements.append(drawing)
+
+    # Espaçamento entre cabeçalho e corpo
+    elements.append(Spacer(1, inch))
+
+    for label, value in body_content:
+        elements.append(Paragraph(f"<b>{label}</b> {value}", normal_style))
+
+    # Espaçamento entre corpo e rodapé
+    elements.append(Spacer(1, inch))
+    elements.append(footer_table)
+
+    # Construindo o PDF
+    doc.build(elements)
