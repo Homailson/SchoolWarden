@@ -143,6 +143,12 @@ h2 {
         width: 100%;
         padding: 1rem;
     }
+
+    .btn-group,
+    .vertical-menu .btn {
+        align-self: center;
+    }
+
 }
 
 /* Estilos para Componentes Específicos */

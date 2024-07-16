@@ -9,7 +9,11 @@
     {{ form.hidden_tag() }}
 
     <div class="form-group row mb-2">
-        <label for="teacher" class="col-sm-2 col-form-label">Professor</label>
+        {% if session.role == 'manager' %}
+        <label for="teacher" class="col-sm-2 col-form-label">Professor(a)|Gestor(a)</label>
+        {% else %}
+        <label for="teacher" class="col-sm-2 col-form-label">Professor(a)</label>
+        {% endif %}
         <div class="col-sm-10">
             {{ form.teacher(class="form-control") }}
             {% for error in form.teacher.errors %}
@@ -19,10 +23,10 @@
     </div>
 
     <div class="form-group row mb-2">
-        <label for="student-search" class="col-sm-2 col-form-label">Aluno</label>
+        <label for="student-search" class="col-sm-2 col-form-label">Aluno(a)</label>
         <div class="col-sm-10">
             <select id="student-search" class="js-example-responsive select2 form-control" style="width: 100%;">
-                <option value="" selected>pesquisar</option>
+                <!-- <option value="" selected>pesquisar</option> -->
                 {% for student_id, student_name in form.student.choices %}
                 <option value="{{ student_id }}">{{ student_name }}</option>
                 {% endfor %}
@@ -35,7 +39,7 @@
     </div>
 
     <div class="form-group row mb-2">
-        <label for="classe" class="col-sm-2 col-form-label">Turma</label>
+        <label for="classe" class="col-sm-2 col-form-label">Turma/Local</label>
         <div class="col-sm-10">
             {{ form.classe(class="form-control") }}
             {% for error in form.classe.errors %}

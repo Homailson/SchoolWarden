@@ -17,6 +17,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import Paragraph, Spacer, Frame, PageTemplate, Image, BaseDocTemplate, Table
 from reportlab.graphics.shapes import Drawing, Line
 from reportlab.lib.colors import black
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 from io import BytesIO
 import requests
 import bcrypt
@@ -54,6 +55,10 @@ def occurrence_submission(role):
         # Buscar dados das coleções
         teachers = list(mongo.db.users.find(
             {'role': 'teacher', 'manager_id': manager_id}))
+        manager = mongo.db.users.find_one(
+            {'_id': ObjectId(manager_id)}
+        )
+        teachers.append(manager)
         classes = list(mongo.db.classes.find({'manager_id': manager_id}))
         subjects = list(mongo.db.subjects.find({'manager_id': manager_id}))
 
@@ -79,20 +84,22 @@ def occurrence_submission(role):
 
     if form.validate_on_submit():
         teacher_id = form.teacher.data
-        student_id = form.student.data
+        students_str = form.student.data
         class_id = form.classe.data
         subject_id = form.subject.data
         classification = form.classification.data
         description = sanitize_description(form.description.data)
 
-        if student_id == "None":
+        students_ids = students_str.split(",")
+
+        if students_ids == "None":
             flash('Por favor, selecione um aluno válido.', 'error')
             endpoint = f'{role}.register_occurrence'
             return render_template('common/register_occurrence.html', form=form, endpoint=endpoint)
 
         result = mongo.db.occurrences.insert_one({
             'teacher_id': teacher_id,
-            'student_id': student_id,
+            'students_ids': students_ids,
             'class_id': class_id,
             'subject_id': subject_id,
             'manager_id': manager_id,
@@ -105,10 +112,11 @@ def occurrence_submission(role):
 
         occurrence_id = result.inserted_id
 
-        mongo.db.users.update_one(
-            {"_id": ObjectId(student_id)},
-            {"$push": {"occurrences": occurrence_id}}
-        )
+        for ids in students_ids:
+            mongo.db.users.update_one(
+                {"_id": ObjectId(ids)},
+                {"$push": {"occurrences": occurrence_id}}
+            )
 
         mongo.db.users.update_one(
             {"_id": ObjectId(teacher_id)},
@@ -162,7 +170,8 @@ def get_users_by_id(ids):
     users = []
     for user_id in ids:
         user = mongo.db.users.find_one({"_id": ObjectId(user_id)})
-        users.append(user)
+        if user not in users:
+            users.append(user)
     return users
 
 
@@ -172,6 +181,14 @@ def get_classes_by_id(ids):
         classe = mongo.db.classes.find_one({"_id": ObjectId(cls_id)})
         classes.append(classe)
     return classes
+
+
+def get_subjects_by_id(ids):
+    subjects = []
+    for sub_id in ids:
+        subject = mongo.db.subjects.find_one({"_id": ObjectId(sub_id)})
+        subjects.append(subject)
+    return subjects
 
 
 def manager_occurrence():
@@ -207,9 +224,9 @@ def search_occurrences():
         teacher = mongo.db.users.find_one({"_id": ObjectId(userID)})
         search_filter['manager_id'] = teacher['manager_id']
 
-    # Se o usuário for professor (teacher), filtra apenas as ocorrências dele
+    # Se o usuário for estudante (student), filtra apenas as ocorrências dele
     if userRole == 'student':
-        search_filter['student_id'] = userID
+        search_filter['students_ids'] = userID
 
     # Condições de busca baseadas na query de pesquisa
     if query:
@@ -223,8 +240,8 @@ def search_occurrences():
             {'description': {'$regex': query, '$options': 'i'}},
             {'classification': {'$regex': query, '$options': 'i'}},
             {'teacher_id': {'$in': users_ids}},
-            {'student_id': {'$in': users_ids}},
-            {'manager_id': ''}
+            {'students_ids': {'$in': users_ids}},
+            {'manager_id': {'$in': users_ids}}
         ]
 
     # Adiciona filtro por período (data)
@@ -245,22 +262,35 @@ def search_occurrences():
 
     # IDs de professores e alunos envolvidos nas ocorrências
     teachers_ids = [occurrence['teacher_id'] for occurrence in occurrences]
-    students_ids = [occurrence['student_id'] for occurrence in occurrences]
+    students_ids = [
+        student_id for occurrence in occurrences for student_id in occurrence['students_ids']]
     classes_ids = [occurrence['class_id'] for occurrence in occurrences]
+    subjects_ids = [occurrence['subject_id'] for occurrence in occurrences]
 
     # Detalhes dos professores e alunos
     teachers = get_users_by_id(teachers_ids)
     students = get_users_by_id(students_ids)
     classes = get_classes_by_id(classes_ids)
+    subjects = get_subjects_by_id(subjects_ids)
 
     # Formatação dos dados das ocorrências para retorno como JSON
     occurrences_data = []
-    for i, occurrence in enumerate(occurrences):
+    for occurrence in occurrences:
+        teacher = next((teacher for teacher in teachers if str(
+            teacher['_id']) == occurrence['teacher_id']), {})
+        occurrence_students = [student for student in students if str(
+            student['_id']) in occurrence['students_ids']]
+        classe = next((classe for classe in classes if str(
+            classe['_id']) == occurrence['class_id']), {})
+        subject = next((subject for subject in subjects if str(
+            subject['_id']) == occurrence['subject_id']), {})
+
         occurrences_data.append({
             'id': str(occurrence['_id']),
-            'teacher': teachers[i]['username'],
-            'student': students[i]['username'],
-            'classe': classes[i]['classe'],
+            'teacher': teacher.get('username', ''),
+            'students': [student['username'] for student in occurrence_students],
+            'classe': classe.get('classe', ''),
+            'subject': subject.get('subject', ''),
             'classification': occurrence['classification'],
             'status': occurrence['status'],
             'description': occurrence['description'],
@@ -455,31 +485,47 @@ def generate_pdf():
         occurrence_data = mongo.db.occurrences.find_one(
             {"_id": ObjectId(occurrence_id)})
 
+        if not occurrence_data:
+            return jsonify({'error': 'Occurrence not found'}), 404
+
         teacher_info = mongo.db.users.find_one(
             {"_id": ObjectId(occurrence_data['teacher_id'])})
-        teacher = teacher_info['username']
+        teacher = teacher_info['username'] if teacher_info else 'Teacher Not Found'
+
         manager_info = mongo.db.users.find_one(
             {"_id": ObjectId(occurrence_data['manager_id'])})
-        manager = manager_info['username']
-        student_info = mongo.db.users.find_one(
-            {"_id": ObjectId(occurrence_data['student_id'])})
-        student = student_info['username']
+        manager = manager_info['username'] if manager_info else 'Manager Not Found'
+
+        # Recuperando informações dos estudantes associados
+        student_ids = occurrence_data.get('students_ids', [])
+        students = []
+        for student_id in student_ids:
+            student_info = mongo.db.users.find_one(
+                {"_id": ObjectId(student_id)})
+            if student_info:
+                students.append(student_info['username'])
+
+        # Recuperando informações da escola
         school_info = mongo.db.users.find_one(
             {"_id": ObjectId(occurrence_data['manager_id'])})
-        school = school_info['school']
-        school_logo = school_info['logo_url']
+        school = school_info['school'] if school_info else 'School Not Found'
+        school_logo = school_info['logo_url'] if school_info else None
+
         classe_info = mongo.db.classes.find_one(
             {"_id": ObjectId(occurrence_data['class_id'])})
-        classe = classe_info['classe']
+        classe = classe_info['classe'] if classe_info else 'Class Not Found'
+
         subject_info = mongo.db.subjects.find_one(
             {"_id": ObjectId(occurrence_data['subject_id'])})
-        subject = subject_info['subject']
+        subject = subject_info['subject'] if subject_info else 'Subject Not Found'
+
         date = occurrence_data['date']
         description = occurrence_data['description']
 
         occurrence = {
+            "teacher_id": occurrence_data['teacher_id'],
             "teacher": teacher,
-            "student": student,
+            "students": students,
             "manager": manager,
             "school": school,
             "school_logo": school_logo,
@@ -499,6 +545,7 @@ def generate_pdf():
         response.headers['Content-Disposition'] = 'inline; filename=relatorio.pdf'
         response.headers['Content-Type'] = 'application/pdf'
         return response
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -570,20 +617,26 @@ def generate_pdf_file(buffer, occurrence):
 
     # Header table com header paragraph e header image
     header_table = Table([[header_paragraph, header_image]], colWidths=[
-                         frame_width*0.50-inch, frame_width*0.50-inch])
+        frame_width*0.50-inch, frame_width*0.50-inch])
 
     header_table.setStyle([
         ('VALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('ALIGN', (-1, -1), (-1, -1), 'RIGHT'),
     ])
 
+    user = mongo.db.users.find_one({"_id": ObjectId(occurrence['teacher_id'])})
+    if user['role'] == 'manager':
+        writer = "Gestor(a): "
+    else:
+        writer = "Professor(a):"
+
     # Conteúdo do corpo
     body_content = [
-        ("Professor(a):", occurrence['teacher']),
+        (writer, occurrence['teacher']),
         ("Disciplina:", occurrence['subject']),
-        ("Aluno(a):", occurrence['student']),
-        ("Turma:", occurrence['classe']),
-        ("Descrição:", occurrence['description'])
+        # Múltiplos estudantes unidos por vírgula
+        ("Aluno(a):", ", ".join(occurrence['students'])),
+        ("Turma:", occurrence['classe'])
     ]
 
     manager_signature = Paragraph("Assinatura do(a) gestor(a)<br/><br/>\
@@ -593,7 +646,7 @@ def generate_pdf_file(buffer, occurrence):
         ______________________________", normal_style)
 
     footer_table = Table([[manager_signature, tutor_signature]], colWidths=[
-                         frame_width*0.50-inch, frame_width*0.50-inch])
+        frame_width*0.50-inch, frame_width*0.50-inch])
 
     # Adicionando elementos ao documento
     elements = []
@@ -609,13 +662,46 @@ def generate_pdf_file(buffer, occurrence):
     elements.append(drawing)
 
     # Espaçamento entre cabeçalho e corpo
-    elements.append(Spacer(1, inch))
+    elements.append(Spacer(1, 0.5*inch))
+
+    centered_heading_style = ParagraphStyle(
+        'CenteredHeading1',
+        parent=styles['Heading1'],
+        alignment=TA_CENTER
+    )
+
+    centered_heading2_style = ParagraphStyle(
+        'CenteredHeading1',
+        parent=styles['Heading2'],
+        alignment=TA_CENTER
+    )
+
+    elements.append(
+        Paragraph("RELATÓRIO DE OCORRÊNCIA", centered_heading_style))
+
+    elements.append(Spacer(1, 0.75*inch))
 
     for label, value in body_content:
         elements.append(Paragraph(f"<b>{label}</b> {value}", normal_style))
 
+    elements.append(Spacer(1, 0.5*inch))
+
+    elements.append(Paragraph("DESCRIÇÃO", centered_heading2_style))
+
+    elements.append(Spacer(1, 0.25*inch))
+
+    custom_body_style = ParagraphStyle(
+        'CustomBodyText',
+        parent=styles['BodyText'],
+        fontSize=12,
+        alignment=TA_JUSTIFY
+    )
+
+    elements.append(
+        Paragraph(f"{occurrence['description']}", custom_body_style))
+
     # Espaçamento entre corpo e rodapé
-    elements.append(Spacer(1, inch))
+    elements.append(Spacer(1, 2*inch))
     elements.append(footer_table)
 
     # Construindo o PDF

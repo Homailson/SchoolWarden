@@ -118,6 +118,8 @@ def register_teacher():
     subjects_mongo = [mongo.db.subjects.find_one(
         {"_id": id}) for id in subjects_ids]
     subjects = [sub['subject'] for sub in subjects_mongo]
+    subjects.remove(
+        "Extradisciplina") if "Extradisciplina" in subjects else subjects
     form.update_subjects(subjects)
 
     # atualizando classes
@@ -125,6 +127,7 @@ def register_teacher():
     classes_mongo = [mongo.db.classes.find_one(
         {"_id": id}) for id in classes_ids]
     classes = [cls['classe'] for cls in classes_mongo]
+    classes.remove("Extraturma") if "Extraturma" in classes else classes
     form.update_classes(classes)
 
     if form.validate_on_submit():
@@ -178,6 +181,7 @@ def register_student():
     classes_mongo = [mongo.db.classes.find_one(
         {"_id": id}) for id in classes_ids]
     classes = [cls['classe'] for cls in classes_mongo]
+    classes.remove("Extraturma") if "Extraturma" in classes else classes
     form = StudentForm()
     form.update_classes(classes)
 

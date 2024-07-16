@@ -62,9 +62,8 @@ Usuário
                     <option value="pending">Ocorrências Pendentes</option>
                 </select>
             </div>
-
             <button id="clear_filter_btn" class="btn btn-dark filter" onclick="clearFilters()">Limpar</button>
-            <button id="clear_filter_btn" class="btn btn-dark filter" onclick="toggleFilters()()">Filtrar</button>
+            <button id="filter_btn" class="btn btn-dark filter" onclick="toggleFilters()">Filtrar</button>
         </div>
     </div>
 
@@ -126,12 +125,13 @@ Usuário
                         return `
                         <div class="card">
                             <div class="card-body">
-                                <h5 class="card-title">Aluno(a): ${occurrence.student}</h5>
+                                <h5 class="card-title">Alunos(as): ${occurrence.students.join(', ')}</h5>
                                 <h6 class="card-subtitle mb-2 text-muted">Professor(a): ${occurrence.teacher}</h6>
                                 <p class="card-text">Data: ${occurrence.date}</p>
                                 <p class="card-text">Descrição: ${occurrence.description.substring(0, 50)}${occurrence.description.length > 50 ? '...' : ''}</p>
                                 <p class="card-text">Tipo: ${occurrence.classification}</p>
                                 <p class="card-text">Turma: ${occurrence.classe}</p>
+                                <p class="card-text">Disciplina: ${occurrence.subject}</p>
                                 <p class="card-text">Status: <span class="${statusClass}"></span></p>
                                 <div class="btn-group">
                                     <button class="btn btn-primary" onclick="viewContent('description', '${occurrence.id}', '${occurrence.description}')">Descrição completa</button>
@@ -327,7 +327,5 @@ Usuário
             }
         }
     </script>
-
-
     <script src="{{ url_for('static', filename='js/select2.js') }}"></script>
     {% endblock %}

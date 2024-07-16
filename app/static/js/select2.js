@@ -17,13 +17,17 @@ $(document).ready(function () {
             }
         },
         minimumInputLength: 1,
-        language: "pt-BR"
+        language: "pt-BR",
+        closeOnSelect: false, // Permite múltiplas seleções sem fechar o dropdown
+        placeholder: "pesquisar", // Define o placeholder
+        allowClear: true, // Permite limpar a seleção
+        multiple: true // Permite seleção múltipla
     });
 
-    // Atualiza o input hidden com o ID do aluno selecionado
+    // Atualiza o input hidden com os IDs dos alunos selecionados
     $('#student-search').on('change', function () {
-        var studentId = $(this).val();
-        $('input[name="student"]').val(studentId).trigger('change');
+        var selectedStudents = $(this).val(); // Array com os IDs dos alunos selecionados
+        $('input[name="student"]').val(selectedStudents.join(',')).trigger('change'); // Converte o array para uma string separada por vírgulas
     });
 
     // Configuração do Select2 para o campo de classificação

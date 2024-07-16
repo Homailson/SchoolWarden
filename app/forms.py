@@ -23,6 +23,7 @@ class LoginForm(FlaskForm):
 class SubjectForm(FlaskForm):
     subject = SelectField('Disciplina', choices=[
         ('', 'Selecione uma disciplina'),
+        ("Extradisciplina", "Extradisciplina"),
         ('Matemática', 'Matemática'),
         ('L.Portuguesa', 'L.Portuguesa'),
         ('Geografia', 'Geografia'),
@@ -50,6 +51,7 @@ class SubjectForm(FlaskForm):
 class ClassForm(FlaskForm):
     classe = SelectField('Turma', choices=[
         ('', 'Selecione uma turma'),
+        ("Extraturma", "Extraturma"),
         ('6A', '6A'), ('6B', '6B'), ('6C', '6C'),
         ('7A', '7A'), ('7B', '7B'), ('7C', '7C'),
         ('8A', '8A'), ('8B', '8B'), ('8C', '8C'),

@@ -13,6 +13,26 @@ $(document).ready(function () {
         return state.text;
     }
 
+
+
+    $('#student-search').select2({
+        templateResult: formatState,
+        templateSelection: formatSelection,
+        closeOnSelect: false,
+        allowClear: true,
+        placeholder: "Selecione os alunos",
+    }).on('select2:select', function (e) {
+        var data = e.params.data;
+        var option = $(this).find('option[value="' + data.id + '"]');
+        option.prop('selected', true);
+        $(this).trigger('change');
+    }).on('select2:unselect', function (e) {
+        var data = e.params.data;
+        var option = $(this).find('option[value="' + data.id + '"]');
+        option.prop('selected', false);
+        $(this).trigger('change');
+    });
+
     $('#subjects').select2({
         templateResult: formatState,
         templateSelection: formatSelection,

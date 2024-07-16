@@ -17,7 +17,6 @@ def manager_required(view_func):
     @wraps(view_func)
     def decorated_function(*args, **kwargs):
         if 'role' in session and session['role'] == 'manager':
-            print(session["role"])
             return view_func(*args, **kwargs)
         else:
             flash('Acesso não autorizado', 'error')

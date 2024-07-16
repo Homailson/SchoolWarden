@@ -159,22 +159,27 @@
 <!-- Contagem de ocorrências pendentes -->
 <script>
     $(document).ready(function () {
-        function loadPendingOccurrencesCount() {
-            $.ajax({
-                url: "{{ url_for('manager.pending_occurrences_count') }}",
-                type: 'GET',
-                success: function (response) {
-                    var pendingCount = response.pending_count;
-                    $('#pending-count').text(pendingCount);
-                },
-                error: function (error) {
-                    console.log('Erro ao carregar o número de ocorrências pendentes:', error);
-                }
-            });
-        }
-        loadPendingOccurrencesCount();
+        const sessionData = {{ session | tojson if session else '{}'
+    }};
+    function loadPendingOccurrencesCount() {
+        $.ajax({
+            url: "{{ url_for('manager.pending_occurrences_count') }}",
+            type: 'GET',
+            success: function (response) {
+                var pendingCount = response.pending_count;
+                $('#pending-count').text(pendingCount);
+            },
+            error: function (error) {
+                console.log('Erro ao carregar o número de ocorrências pendentes:', error);
+            }
+        });
+    }
 
-        setInterval(loadPendingOccurrencesCount, 30000);
+
+    if (sessionData && sessionData.role === 'manager') {
+        loadPendingOccurrencesCount();
+        setInterval(loadPendingOccurrencesCount, 50 * 60 * 1000);
+    }
     });
 </script>
 
