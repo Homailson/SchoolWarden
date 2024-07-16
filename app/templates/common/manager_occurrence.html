@@ -249,6 +249,7 @@ Usuário
                     if (data.success) {
                         closeModal(modalId);
                         fetchOccurrences();
+                        loadPendingOccurrencesCount();
                     } else {
                         alert(`Erro ao salvar a ${currentContentType}`);
                     }
@@ -327,5 +328,6 @@ Usuário
             }
         }
     </script>
+
     <script src="{{ url_for('static', filename='js/select2.js') }}"></script>
     {% endblock %}

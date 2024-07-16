@@ -41,7 +41,6 @@ def register_subject():
     subjects_ids = user['subjects']
     subjects_mongo = [mongo.db.subjects.find_one(
         {"_id": id}) for id in subjects_ids]
-    print(subjects_mongo)
     subjects = [subj['subject'] for subj in subjects_mongo]
     form = SubjectForm()
     form.update_subjects(subjects)

@@ -151,7 +151,6 @@ def create_app():
 
     @app.before_request
     def update_session_activity():
-        print(session)
         session.modified = True
 
     return app
