@@ -626,16 +626,16 @@ def generate_pdf_file(buffer, occurrence):
 
     user = mongo.db.users.find_one({"_id": ObjectId(occurrence['teacher_id'])})
     if user['role'] == 'manager':
-        writer = "Gestor(a): "
+        writer = "Gestor(a) "
     else:
-        writer = "Professor(a):"
+        writer = "Professor(a) "
 
     # Conteúdo do corpo
     body_content = [
-        (writer, occurrence['teacher']),
+        ("Relator(a):", f"{writer}{occurrence['teacher']}"),
         ("Disciplina:", occurrence['subject']),
         # Múltiplos estudantes unidos por vírgula
-        ("Aluno(a):", ", ".join(occurrence['students'])),
+        ("Estudante(s):", ", ".join(occurrence['students'])),
         ("Turma:", occurrence['classe'])
     ]
 
