@@ -9,6 +9,8 @@ from app.utils.common import (
     delete_occurrence,
     update_field,
     configurations,
+    username_form_route,
+    changing_username,
     password_form_route,
     changing_password,
     email_form_route,
@@ -80,6 +82,17 @@ def configurations_route():
 def profile_info_route():
     return profile_info()
 
+@ teacher_bp.route('/configurations/username')
+@login_required
+@ teacher_required
+def change_username_form():
+    return username_form_route()
+
+
+@ teacher_bp.route('/configurations/username/change', methods=['POST'])
+@ teacher_required
+def changing_username_route():
+    return changing_username()
 
 @teacher_bp.route('/configurations/password')
 @login_required

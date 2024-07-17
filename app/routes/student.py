@@ -5,6 +5,8 @@ from app.utils.common import (
     manager_occurrence,
     search_occurrences,
     configurations,
+    username_form_route,
+    changing_username,
     password_form_route,
     changing_password,
     email_form_route,
@@ -49,6 +51,17 @@ def configurations_route():
 def profile_info_route():
     return profile_info()
 
+@ student_bp.route('/configurations/username')
+@login_required
+@ student_required
+def change_username_form():
+    return username_form_route()
+
+
+@ student_bp.route('/configurations/username/change', methods=['POST'])
+@ student_required
+def changing_username_route():
+    return changing_username()
 
 @student_bp.route('/configurations/password')
 @login_required
