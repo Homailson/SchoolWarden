@@ -152,5 +152,10 @@ def create_app():
     @app.before_request
     def update_session_activity():
         session.modified = True
+        
+    @app.errorhandler(400)
+    def bad_request_error(error):
+        flash('Token de sessão expirado, faça login novamente.', 'error')
+        return redirect(url_for('login'))
 
     return app

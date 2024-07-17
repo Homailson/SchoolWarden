@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, session, current_app
-from app.decorators import admin_required
+from app.decorators import admin_required, login_required
 from app.forms import ManagerForm
 from app.utils.common import (
     index,
@@ -17,12 +17,14 @@ admin_bp = Blueprint('admin', __name__)
 
 
 @admin_bp.route('/')
+@login_required
 @admin_required
 def index_route():
     return index()
 
 
 @admin_bp.route('/register', methods=['GET', 'POST'])
+@login_required
 @admin_required
 def register_manager():
     if 'role' not in session or session['role'] != 'admin':
@@ -64,35 +66,41 @@ def register_manager():
 
 
 @admin_bp.route('/configurations')
+@login_required
 @admin_required
 def configurations_route():
     return configurations()
 
 
 @admin_bp.route('/configurations/password')
+@login_required
 @admin_required
 def change_password_form():
     return password_form_route()
 
 
 @admin_bp.route('/profile_info')
+@login_required
 @admin_required
 def profile_info_route():
     return profile_info()
 
 
 @admin_bp.route('/configurations/password/change', methods=['POST'])
+@login_required
 @admin_required
 def changing_password_route():
     return changing_password()
 
 
 @admin_bp.route('/configurations/email')
+@login_required
 def change_email_form():
     return email_form_route()
 
 
 @admin_bp.route('/configurations/email/change', methods=['POST'])
+@login_required
 @admin_required
 def changing_email_route():
     return changing_email()

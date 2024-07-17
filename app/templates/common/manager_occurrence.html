@@ -213,6 +213,27 @@ Usuário
             }
         }
 
+        const sessionData = {{ session | tojson if session else '{}'
+        }};
+
+        // Função para atualizar ocorrências pendentes.
+        // Ela esta redundante em layout.html
+        // É importante ela estar nos dois arquivos.
+        function loadPendingOccurrencesCount() {
+            $.ajax({
+                url: "{{ url_for('manager.pending_occurrences_count') }}",
+                type: 'GET',
+                success: function (response) {
+                    var pendingCount = response.pending_count;
+                    $('#pending-count').text(pendingCount);
+                },
+                error: function (error) {
+                    console.log('Erro ao carregar o número de ocorrências pendentes:', error);
+                }
+            });
+        }
+
+
         function closeModal(modalId) {
             document.getElementById(modalId).style.display = 'none';
         }

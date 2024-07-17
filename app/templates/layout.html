@@ -131,11 +131,29 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"
         integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF"
         crossorigin="anonymous"></script>
-    <script src="{{ url_for('static', filename=('js/layout.js')) }}"></script>
 </body>
 
-<!-- Função para contagem de ocorrências pendentes -->
 <script>
+    //Controlador do Menu de configurações em telas pequenas
+    $(document).ready(function () {
+        $('.config-nav-link').click(function (e) {
+            e.preventDefault();
+            var url = $(this).data('url');
+            $('#main-content').load(url);
+        });
+    });
+
+    //Ativador da abertura do menu de configurações em telas pequenas
+    function toggleMenu() {
+        const navFlexColumn = document.getElementById('nav-list');
+        if (navFlexColumn.classList.contains('active')) {
+            navFlexColumn.classList.remove('active');
+        } else {
+            navFlexColumn.classList.add('active');
+        }
+    }
+
+    // Contagem de ocorrências pendentes
     $(document).ready(function () {
         const sessionData = {{ session | tojson if session else '{}'
     }};
@@ -160,4 +178,5 @@
     }
     });
 </script>
+
 </html>

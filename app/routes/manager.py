@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, session, current_app, jsonify
-from app.decorators import manager_required
+from app.decorators import manager_required, login_required
 from app.forms import ClassForm
 from app.forms import SubjectForm
 from app.forms import StudentForm
@@ -28,12 +28,14 @@ manager_bp = Blueprint('manager', __name__)
 
 
 @manager_bp.route('/')
+@login_required
 @manager_required
 def index_route():
     return index()
 
 
 @manager_bp.route('/register_subject', methods=['GET', 'POST'])
+@login_required
 @manager_required
 def register_subject():
     manager_id = session.get('userID')
@@ -68,6 +70,7 @@ def register_subject():
 
 
 @manager_bp.route('/register_class', methods=['GET', 'POST'])
+@login_required
 @manager_required
 def register_class():
     manager_id = session.get('userID')
@@ -102,6 +105,7 @@ def register_class():
 
 
 @ manager_bp.route('/register_teacher', methods=['GET', 'POST'])
+@login_required
 @ manager_required
 def register_teacher():
     if 'role' not in session or session['role'] != 'manager':
@@ -167,6 +171,7 @@ def register_teacher():
 
 
 @ manager_bp.route('/register_student', methods=['GET', 'POST'])
+@login_required
 @ manager_required
 def register_student():
     if 'role' not in session or session['role'] != 'manager':
@@ -218,66 +223,77 @@ def register_student():
 
 
 @ manager_bp.route('/register_occurrence', methods=['GET', 'POST'])
+@login_required
 @ manager_required
 def register_occurrence():
     return occurrence_submission('manager')
 
 
 @ manager_bp.route('/api/search_students')
+@login_required
 @ manager_required
 def search_students_route():
     return search_students()
 
 
 @ manager_bp.route('/manager_occurrence')
+@login_required
 @ manager_required
 def manager_occurrence_route():
     return manager_occurrence()
 
 
 @ manager_bp.route('/manager_occurrence/search')
+@login_required
 @ manager_required
 def search_occurrences_route():
     return search_occurrences()
 
 
 @ manager_bp.route('/manager_occurrence/delete/<string:id>', methods=['POST'])
+@login_required
 @ manager_required
 def delete_occurrence_route(id):
     return delete_occurrence(id)
 
 
 @ manager_bp.route('/manager_occurrence/update/<string:field>/<string:occurrence_id>', methods=['POST'])
+@login_required
 @ manager_required
 def update_occurrence_field_route(field, occurrence_id):
     return update_field(field, occurrence_id)
 
 
 @ manager_bp.route('/configurations')
+@login_required
 @ manager_required
 def configurations_route():
     return configurations()
 
 
 @ manager_bp.route('/profile_info')
+@login_required
 @ manager_required
 def profile_info_route():
     return profile_info()
 
 
 @ manager_bp.route('/configurations/password')
+@login_required
 @ manager_required
 def change_password_form():
     return password_form_route()
 
 
 @ manager_bp.route('/configurations/password/change', methods=['POST'])
+@login_required
 @ manager_required
 def changing_password_route():
     return changing_password()
 
 
 @ manager_bp.route('/configurations/email')
+@login_required
 @ manager_required
 def change_email_form():
     return email_form_route()
@@ -290,6 +306,7 @@ def changing_email_route():
 
 
 @manager_bp.route('/api/pending_occurrences_count', methods=['GET'])
+@login_required
 @manager_required
 def pending_occurrences_count():
     role = session.get('role')
@@ -311,6 +328,7 @@ def pending_occurrences_count():
 
 
 @manager_bp.route('/api/generate_pdf', methods=['POST'])
+@login_required
 @manager_required
 def generate_pdf_route():
     return generate_pdf()

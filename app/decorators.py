@@ -44,3 +44,13 @@ def student_required(view_func):
             flash('Acesso não autorizado', 'error')
             return redirect(url_for('main.index'))
     return decorated_function
+
+
+def login_required(view_func):
+    @wraps(view_func)
+    def decorated_function(*args, **kwargs):
+        if 'email' not in session:
+            flash('Sessão expirada, faça login novamente.', 'error')
+            return redirect(url_for('main.index'))
+        return view_func(*args, **kwargs)
+    return decorated_function
