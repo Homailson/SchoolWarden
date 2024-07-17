@@ -282,6 +282,25 @@ class ChangeEmailForm(FlaskForm):
         ]
     )
     submit = SubmitField('Alterar')
+    
+    
+class ChangeUsernameForm(FlaskForm):
+    new_username = StringField(
+        'Novo nome de usuário',
+        validators=[
+            DataRequired()
+        ]
+    )
+
+    confirm_username = StringField(
+        'Confirmar nome de usuário',
+        validators=[
+            DataRequired(),
+            EqualTo('new_username',
+                    message='Os nomes não coincidem!')
+        ]
+    )
+    submit = SubmitField('Alterar')
 
 
 class ChangePasswordForm(FlaskForm):

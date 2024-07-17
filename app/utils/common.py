@@ -8,7 +8,7 @@ from flask import (
 )
 
 from datetime import datetime, timezone
-from app.forms import OccurrenceForm, ChangePasswordForm, ChangeEmailForm
+from app.forms import OccurrenceForm, ChangePasswordForm, ChangeEmailForm, ChangeUsernameForm
 from app import mongo
 from bson.objectid import ObjectId
 from reportlab.lib.pagesizes import A4
@@ -469,6 +469,36 @@ def changing_email():
             flash('Este usuário não tem e-mail')
     else:
         flash('Os emails não coincidem!')
+    return redirect(url_for(f'{role}.configurations_route'))
+
+
+def username_form_route():
+    form = ChangeUsernameForm()
+    role = session['role']
+    return render_template('/common/change_username.html', form=form, role=role)
+
+def changing_username():
+    form = ChangeUsernameForm()
+    role = session['role']
+    if form.validate_on_submit():
+        userID = session.get('userID')
+        user = mongo.db.users.find_one({"_id": ObjectId(userID)})
+        if user and 'username' in user:
+            new_username = form.new_username.data
+            confirm_username = form.confirm_username.data
+            if new_username != confirm_username:
+                flash('Os nomes não coincidem!')
+            else:
+                mongo.db.users.update_one(
+                    {"_id": ObjectId(userID)},
+                    {"$set": {"username": new_username}}
+                )
+                flash('Seu nome de usuário foi alterado com sucesso!')
+                return redirect(url_for(f'{role}.configurations_route'))
+        else:
+            flash('Este usuário não tem nome de usuário')
+    else:
+        flash('Os nomes de usuário não coincidem!')
     return redirect(url_for(f'{role}.configurations_route'))
 
 

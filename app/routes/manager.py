@@ -17,6 +17,8 @@ from app.utils.common import (
     configurations,
     password_form_route,
     changing_password,
+    username_form_route,
+    changing_username,
     email_form_route,
     changing_email,
     profile_info,
@@ -290,6 +292,19 @@ def change_password_form():
 @ manager_required
 def changing_password_route():
     return changing_password()
+
+
+@ manager_bp.route('/configurations/username')
+@login_required
+@ manager_required
+def change_username_form():
+    return username_form_route()
+
+
+@ manager_bp.route('/configurations/username/change', methods=['POST'])
+@ manager_required
+def changing_username_route():
+    return changing_username()
 
 
 @ manager_bp.route('/configurations/email')

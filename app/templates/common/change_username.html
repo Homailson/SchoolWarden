@@ -1,0 +1,25 @@
+{% block pages %}
+<div id="page-content">
+    <form method="POST" action="{{ url_for(role+'.changing_username_route') }}">
+        {{ form.hidden_tag() }}
+        <h1 class="h3 mb-3 fw-normal">Alterar nome de usuário</h1>
+
+        <div class="form-floating mb-3">
+            {{ form.new_username(size=32, class="form-control", id="new_username", placeholder="Novo nome de usuário",
+            autocomplete="new_username") }}
+            <label for="new_username">{{ form.new_username.label }}</label>
+        </div>
+
+        <div class="form-floating mb-3">
+            {{ form.confirm_username(size=32, class="form-control", id="confirm_username", placeholder="Confirme o novo
+            nome de usuário", autocomplete="confirm_username") }}
+            <label for="confirm_username">{{ form.confirm_username.label }}</label>
+            {% for error in form.confirm_username.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </div>
+
+        <button class="w-100 btn btn-lg btn-dark mt-3" type="submit">Alterar</button>
+    </form>
+</div>
+{% endblock %}
