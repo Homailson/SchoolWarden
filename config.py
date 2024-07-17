@@ -7,7 +7,7 @@ from datetime import timedelta
 # class Config:
 #     MONGO_URI = os.getenv('MONGO_URI')
 #     MONGO_DBNAME = 'SchoolCare'
-#     SECRET_KEY = 'Escort1986201326*#20202022*#'
+#     SECRET_KEY = 'uma bela senha'
 #     MAIL_SERVER = 'smtp.gmail.com'
 #     MAIL_PORT = 587
 #     MAIL_USE_TLS = True
