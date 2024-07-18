@@ -522,6 +522,7 @@ def changing_username():
                     {"$set": {"username": new_username}}
                 )
                 flash('Seu nome de usuário foi alterado com sucesso!', 'success')
+                session['username'] = new_username
                 return redirect(url_for(f'{role}.configurations_route'))
         else:
             flash('Este usuário não tem nome de usuário', 'info')

@@ -4,6 +4,8 @@ from app.forms import ManagerForm
 from app.utils.common import (
     index,
     configurations,
+    username_form_route,
+    changing_username,
     password_form_route,
     changing_password,
     email_form_route,
@@ -70,6 +72,19 @@ def register_manager():
 @admin_required
 def configurations_route():
     return configurations()
+
+@ admin_bp.route('/configurations/username')
+@login_required
+@ admin_required
+def change_username_form():
+    return username_form_route()
+
+
+@ admin_bp.route('/configurations/username/change', methods=['POST'])
+@login_required
+@ admin_required
+def changing_username_route():
+    return changing_username()
 
 
 @admin_bp.route('/configurations/password')

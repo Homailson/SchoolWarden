@@ -305,6 +305,7 @@ def change_username_form():
 
 
 @ manager_bp.route('/configurations/username/change', methods=['POST'])
+@login_required
 @ manager_required
 def changing_username_route():
     return changing_username()
@@ -318,6 +319,7 @@ def change_email_form():
 
 
 @ manager_bp.route('/configurations/email/change', methods=['POST'])
+@login_required
 @ manager_required
 def changing_email_route():
     return changing_email()
