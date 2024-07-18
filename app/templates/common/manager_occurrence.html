@@ -297,6 +297,7 @@ Usuário
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) fetchOccurrences();
+                    loadPendingOccurrencesCount();
                 });
         }
 
