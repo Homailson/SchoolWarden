@@ -40,7 +40,7 @@ def register_manager():
         confirm_email = form.confirm_email.data
         logo_url = form.logo_url.data
         if email != confirm_email:
-            flash('As senhas não coincidem!')
+            flash('As senhas não coincidem!', 'error')
             return redirect(url_for('admin.register_manager'))
         else:
             # Hashing da senha

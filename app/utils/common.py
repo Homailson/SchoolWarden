@@ -88,7 +88,7 @@ def occurrence_submission(role):
         class_id = form.classe.data
         subject_id = form.subject.data
         classification = form.classification.data
-        description = sanitize_description(form.description.data)
+        description = sanitize_description(form.description.data)                
 
         students_ids = students_str.split(",")
 
@@ -96,7 +96,35 @@ def occurrence_submission(role):
             flash('Por favor, selecione um aluno válido.', 'error')
             endpoint = f'{role}.register_occurrence'
             return render_template('common/register_occurrence.html', form=form, endpoint=endpoint)
+        
+        
+        
+        students = [mongo.db.users.find_one({"_id":ObjectId(id)}) for id in students_ids]
+        stdnts_cls_ids = [stds['classe'] for stds in students]
+        teacher = mongo.db.users.find_one({"_id":ObjectId(teacher_id)})
+        teacher_cls = teacher['classes']
+        teacher_subs = teacher['subjects']
+        chosed_cls = mongo.db.classes.find_one({"_id":ObjectId(class_id)})
+        chosed_classe = chosed_cls['classe']
+        
+        if chosed_classe != "Extraturma":
+            for id in stdnts_cls_ids:
+                print(id, ObjectId(class_id))
+                if id != ObjectId(class_id):
+                    flash('Ocorrência não cadastrada!\
+                        Pelo menos um aluno não pertence à turma escolhida.', 'error')
+                    return redirect(url_for(f'{role}.register_occurrence'))
 
+        if ObjectId(class_id) not in teacher_cls:
+            flash('Ocorrência não cadastrada!\
+                    O professor selecionado não leciona na turma escolhida.', 'error')
+            return redirect(url_for(f'{role}.register_occurrence'))        
+            
+        if ObjectId(subject_id) not in teacher_subs:
+            flash('Ocorrência não cadastrada!\
+                    O professor selecionado não leciona a disciplina escolhida.', 'error')
+            return redirect(url_for(f'{role}.register_occurrence'))    
+                
         result = mongo.db.occurrences.insert_one({
             'teacher_id': teacher_id,
             'students_ids': students_ids,
@@ -434,7 +462,7 @@ def changing_password():
                     {"_id": ObjectId(userID)},
                     {"$set": {"password": hashed_password.decode('utf-8')}}
                 )
-                flash('Sua senha foi alterada com sucesso!')
+                flash('Sua senha foi alterada com sucesso!', 'success')
                 return redirect(url_for(f'{role}.configurations_route'))
             else:
                 flash('Senha atual inserida não corresponde', 'error')
@@ -457,18 +485,18 @@ def changing_email():
             new_email = form.new_email.data
             confirm_email = form.confirm_email.data
             if new_email != confirm_email:
-                flash('Os emails não coincidem!')
+                flash('Os emails não coincidem!', 'error')
             else:
                 mongo.db.users.update_one(
                     {"_id": ObjectId(userID)},
                     {"$set": {"email": new_email}}
                 )
-                flash('Seu e-mail foi alterado com sucesso!')
+                flash('Seu e-mail foi alterado com sucesso!', 'success')
                 return redirect(url_for(f'{role}.configurations_route'))
         else:
-            flash('Este usuário não tem e-mail')
+            flash('Este usuário não tem e-mail', 'info')
     else:
-        flash('Os emails não coincidem!')
+        flash('Os emails não coincidem!', 'error')
     return redirect(url_for(f'{role}.configurations_route'))
 
 
@@ -487,18 +515,18 @@ def changing_username():
             new_username = form.new_username.data
             confirm_username = form.confirm_username.data
             if new_username != confirm_username:
-                flash('Os nomes não coincidem!')
+                flash('Os nomes não coincidem!', 'error')
             else:
                 mongo.db.users.update_one(
                     {"_id": ObjectId(userID)},
                     {"$set": {"username": new_username}}
                 )
-                flash('Seu nome de usuário foi alterado com sucesso!')
+                flash('Seu nome de usuário foi alterado com sucesso!', 'success')
                 return redirect(url_for(f'{role}.configurations_route'))
         else:
-            flash('Este usuário não tem nome de usuário')
+            flash('Este usuário não tem nome de usuário', 'info')
     else:
-        flash('Os nomes de usuário não coincidem!')
+        flash('Os nomes de usuário não coincidem!', 'error')
     return redirect(url_for(f'{role}.configurations_route'))
 
 

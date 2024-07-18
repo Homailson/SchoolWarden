@@ -3,7 +3,7 @@
 {% block title %}Cadastro de Disciplina{% endblock %}
 
 {% block content %}
-<h2 class="text-center mb-2 mt-4">Cadastro de Disciplina</h2>
+<h2 class="text-center mb-2 mt-4">Cadastro de Disciplina {{ year }}</h2>
 <form method="POST" action="{{ url_for('manager.register_subject') }}">
     {{ form.hidden_tag() }}
     <div class="mb-3">

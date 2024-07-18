@@ -5,6 +5,7 @@ from app.forms import SubjectForm
 from app.forms import StudentForm
 from app.forms import TeacherForm
 from app import mongo
+from datetime import date
 from bson.objectid import ObjectId
 from app.utils.common import (
     index,
@@ -48,6 +49,7 @@ def register_subject():
     subjects = [subj['subject'] for subj in subjects_mongo]
     form = SubjectForm()
     form.update_subjects(subjects)
+    year=date.today().year
     if form.validate_on_submit():
         subject = form.subject.data
 
@@ -55,7 +57,8 @@ def register_subject():
         result = mongo.db.subjects.insert_one({
             'subject': subject,
             'occurrences': [],
-            'manager_id': manager_id
+            'manager_id': manager_id,
+            'year': year
         })
 
         subject_id = result.inserted_id
@@ -68,7 +71,7 @@ def register_subject():
         flash('Disciplina cadastrada com sucesso!', 'success')
         return redirect(url_for('manager.index_route'))
 
-    return render_template('manager/register_subject.html', form=form)
+    return render_template('manager/register_subject.html', form=form, year=year)
 
 
 @manager_bp.route('/register_class', methods=['GET', 'POST'])
@@ -83,6 +86,7 @@ def register_class():
     classes = [cls['classe'] for cls in classes_mongo]
     form = ClassForm()
     form.update_classes(classes)
+    year=date.today().year
     if form.validate_on_submit():
         classe = form.classe.data
 
@@ -90,7 +94,8 @@ def register_class():
         result = mongo.db.classes.insert_one({
             'classe': classe,
             'occurrences': [],
-            'manager_id': manager_id
+            'manager_id': manager_id,
+            'year': year
         })
 
         classe_id = result.inserted_id
@@ -103,7 +108,7 @@ def register_class():
         flash('Turma cadastrada com sucesso!', 'success')
         return redirect(url_for('manager.index_route'))
 
-    return render_template('manager/register_class.html', form=form)
+    return render_template('manager/register_class.html', form=form, year=year)
 
 
 @ manager_bp.route('/register_teacher', methods=['GET', 'POST'])
@@ -150,7 +155,7 @@ def register_teacher():
                        for cls in classes_mongo if cls['classe'] in classes]
 
         if email != confirm_email:
-            flash('Os emails não coincidem!')
+            flash('Os emails não coincidem!', 'error')
         else:
             # Hashing da senha
             hashed_password = bcrypt.hashpw(
@@ -199,15 +204,13 @@ def register_student():
         classe = form.classe.data
 
         if email != confirm_email:
-            flash('Os emails não coincidem!')
+            flash('Os emails não coincidem!', 'error')
         else:
             # Hashing da senha
             hashed_password = bcrypt.hashpw(
                 password.encode('utf-8'), bcrypt.gensalt())
 
-            classe_id = [
-                cls['_id'] for cls in classes_mongo if cls['classe'] == classe
-            ]
+            classe_id = [cls['_id'] for cls in classes_mongo if cls['classe'] == classe][0]
 
             mongo.db.users.insert_one({
                 'username': username,

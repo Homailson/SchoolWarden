@@ -5,6 +5,53 @@ h2 {
     margin-bottom: 20px;
 }
 
+.success {
+    color: green;      
+    background-color: #d4edda;
+    border: 1px solid green;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    list-style: none;
+    text-align: center;
+}
+
+
+.error {
+    color: red;
+    background-color: #f8d7da;
+    border: 1px solid red;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    list-style: none;
+    text-align: center;
+}
+
+
+.info {
+    color: blue;
+    background-color: #d1ecf1;
+    border: 1px solid blue;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    list-style: none;
+    text-align: center;
+}
+
+.warning {
+    color: orange;
+    background-color: #fff3cd;
+    border: 1px solid orange;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    list-style: none;
+    text-align: center;
+}
+
+
 .container {
     margin-top: 1rem;
 }

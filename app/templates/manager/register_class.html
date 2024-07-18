@@ -3,7 +3,7 @@
 {% block title %}Cadastro de Turma{% endblock %}
 
 {% block content %}
-<h2 class="text-center mb-2 mt-4">Cadastro de Turma</h2>
+<h2 class="text-center mb-2 mt-4">Cadastro de Turma {{ year }}</h2>
 <form method="POST" action="{{ url_for('manager.register_class') }}">
     {{ form.hidden_tag() }}
     <div class="mb-3">
