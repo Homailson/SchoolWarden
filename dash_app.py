@@ -3,6 +3,8 @@ from dash import dcc, html
 import dash_bootstrap_components as dbc
 import pandas as pd
 from dash.dependencies import Input, Output
+import plotly.express as px
+import plotly.graph_objects as go
 
 def create_dash_app(flask_app, mongo):
     dash_app = dash.Dash(
@@ -11,6 +13,7 @@ def create_dash_app(flask_app, mongo):
         url_base_pathname='/dash/',
         external_stylesheets=[dbc.themes.BOOTSTRAP]
     )
+    
 
     def get_figure_occurrences():
         try:
@@ -43,25 +46,42 @@ def create_dash_app(flask_app, mongo):
             df['count'] = df['count']
             df.drop(columns=['_id'], inplace=True)
 
-            # Configurar o gráfico
-            fig = {
-                'data': [{'x': df['classification'], 'y': df['count'], 'type': 'bar', 'name': 'Total de Ocorrências'}],
-                'layout': {
-                    'title': 'Total de Ocorrências por Tipo',
-                    'yaxis': {
-                        'tickformat': 'd',  # Formatar o eixo Y para mostrar apenas inteiros
-                        'dtick': 1          # Define o intervalo entre os ticks do eixo Y
-                    },
-                    'height': 600,
-                    'margin': {
-                        'l': 50,  # Margem esquerda
-                        'r': 50,  # Margem direita
-                        't': 150,  # Margem superior
-                        'b': 150   # Margem inferior para espaço extra para legendas
-                    },
-                }
-            }
-            return fig
+            # Criar uma lista de cores para as barras
+            colors = px.colors.qualitative.Plotly  # Utiliza paleta de cores do Plotly
+
+            # Criar o gráfico
+            fig = go.Figure()
+
+            fig.add_trace(go.Bar(
+                x=df['classification'],
+                y=df['count'],
+                name='Ocorrências',
+                marker_color=[colors[i % len(colors)] for i in range(len(df))]
+            ))
+
+            # Personalizar layout do gráfico
+            fig.update_layout(
+                title='Total de Ocorrências por Tipo',
+                title_x=0.5,  # Centralizar o título
+                yaxis=dict(
+                    tickformat='d',  # Formatar o eixo Y para mostrar apenas inteiros
+                    dtick=1          # Define o intervalo entre os ticks do eixo Y
+                ),
+                legend=dict(
+                    orientation='h',  # Define a orientação da legenda horizontal
+                    yanchor='bottom', # Ancorar a legenda na parte inferior
+                    y=1.1             # Ajusta a posição da legenda para acima do gráfico
+                ),
+                height=600,
+                margin=dict(
+                    l=50,  # Margem esquerda
+                    r=50,  # Margem direita
+                    t=100, # Margem superior
+                    b=150  # Margem inferior ajustada para espaço extra para legendas
+                ),
+            )
+
+            return fig.to_dict()  # Retorna o gráfico como um dicionário
         except Exception as e:
             print(f"Error in get_figure_occurrences: {e}")
             return {
@@ -73,15 +93,22 @@ def create_dash_app(flask_app, mongo):
                         'dtick': 1
                     }
                 }
-            }
+            }    
         
-    def get_figure_occurrences_by_class():
+    def get_figure_occurrences_by_class_and_type():
         try:
-            # Consultar e agregar dados do MongoDB para total de ocorrências por turma
+            # Consultar e agregar dados do MongoDB para total de ocorrências por turma e tipo
             pipeline = [
                 {"$unwind": "$occurrences"},  # Desdobra o array de ocorrências
-                {"$group": {"_id": "$classe", "count": {"$sum": 1}}},  # Conta ocorrências por turma
-                {"$sort": {"_id": 1}}  # Ordena por nome da turma
+                {"$lookup": {
+                    "from": "occurrences",
+                    "localField": "occurrences",
+                    "foreignField": "_id",
+                    "as": "occurrence_details"
+                }},
+                {"$unwind": "$occurrence_details"},  # Desdobra os detalhes das ocorrências
+                {"$group": {"_id": {"class": "$classe", "type": "$occurrence_details.classification"}, "count": {"$sum": 1}}},  # Conta ocorrências por turma e tipo
+                {"$sort": {"_id.class": 1, "_id.type": 1}}  # Ordena por turma e tipo
             ]
             data = list(mongo.db.classes.aggregate(pipeline))
 
@@ -94,14 +121,7 @@ def create_dash_app(flask_app, mongo):
                         'yaxis': {
                             'tickformat': 'd',
                             'dtick': 1
-                        },
-                        'height': 600,
-                        'margin': {
-                            'l': 50,  # Margem esquerda
-                            'r': 50,  # Margem direita
-                            't': 150,  # Margem superior
-                            'b': 150   # Margem inferior para espaço extra para legendas
-                        },
+                        }
                     }
                 }
 
@@ -110,24 +130,50 @@ def create_dash_app(flask_app, mongo):
             if '_id' not in df.columns or 'count' not in df.columns:
                 raise ValueError("Expected columns '_id' or 'count' not found in data.")
 
-            df['class'] = df['_id']
+            df['class'] = df['_id'].apply(lambda x: x['class'])
+            df['type'] = df['_id'].apply(lambda x: x['type'])
             df['count'] = df['count']
             df.drop(columns=['_id'], inplace=True)
 
-            # Configurar o gráfico
-            fig = {
-                'data': [{'x': df['class'], 'y': df['count'], 'type': 'bar', 'name': 'Total de Ocorrências por Turma'}],
-                'layout': {
-                    'title': 'Total de Ocorrências por Turma',
-                    'yaxis': {
-                        'tickformat': 'd',  # Formatar o eixo Y para mostrar apenas inteiros
-                        'dtick': 1          # Define o intervalo entre os ticks do eixo Y
-                    }
-                }
-            }
-            return fig
+            # Pivotar o DataFrame para o formato necessário para o gráfico
+            df_pivot = df.pivot(index='class', columns='type', values='count').fillna(0)
+            df_pivot.reset_index(inplace=True)
+
+            # Criar o gráfico com plotly.graph_objects
+            traces = []
+            for column in df_pivot.columns[1:]:  # Ignorar a primeira coluna que é 'class'
+                traces.append(go.Bar(
+                    x=df_pivot['class'],
+                    y=df_pivot[column],
+                    name=column
+                ))
+
+            fig = go.Figure(data=traces)
+            fig.update_layout(
+                title='Total de Ocorrências por Turma e Tipo',
+                title_x=0.5,
+                barmode='stack',  # Para empilhar as barras
+                yaxis=dict(
+                    tickformat='d',  # Formatar o eixo Y para mostrar apenas inteiros
+                    dtick=1          # Define o intervalo entre os ticks do eixo Y
+                ),
+                legend=dict(
+                    orientation='h',  # Define a orientação da legenda horizontal
+                    yanchor='top',    # Ancorar a legenda na parte superior
+                    # y=-0.2,         # Ajusta a posição da legenda para baixo do gráfico
+                ),
+                height=600,
+                margin=dict(
+                    l=50,  # Margem esquerda
+                    r=50,  # Margem direita
+                    t=100,  # Margem superior
+                    b=200   # Margem inferior ajustada para espaço extra para legendas
+                ),
+            )
+
+            return fig.to_dict()  # Retorna o gráfico como um dicionário
         except Exception as e:
-            print(f"Error in get_figure_occurrences_by_class: {e}")
+            print(f"Error in get_figure_occurrences_by_class_and_type: {e}")
             return {
                 'data': [],
                 'layout': {
@@ -138,14 +184,26 @@ def create_dash_app(flask_app, mongo):
                     }
                 }
             }
+        
 
-    def get_figure_occurrences_by_subject():
+
+    def get_figure_occurrences_by_subject_and_type():
         try:
-            # Consultar e agregar dados do MongoDB para total de ocorrências por matéria
+            # Consultar e agregar dados do MongoDB para total de ocorrências por matéria e tipo
             pipeline = [
                 {"$unwind": "$occurrences"},  # Desdobra o array de ocorrências
-                {"$group": {"_id": "$subject", "count": {"$sum": 1}}},  # Conta ocorrências por matéria
-                {"$sort": {"_id": 1}}  # Ordena por nome da matéria
+                {"$lookup": {
+                    "from": "occurrences",
+                    "localField": "occurrences",
+                    "foreignField": "_id",
+                    "as": "occurrence_details"
+                }},
+                {"$unwind": "$occurrence_details"},  # Desdobra os detalhes das ocorrências
+                {"$group": {
+                    "_id": {"subject": "$subject", "type": "$occurrence_details.classification"},
+                    "count": {"$sum": 1}
+                }},
+                {"$sort": {"_id.subject": 1, "_id.type": 1}}  # Ordena por matéria e tipo
             ]
             data = list(mongo.db.subjects.aggregate(pipeline))
 
@@ -167,24 +225,50 @@ def create_dash_app(flask_app, mongo):
             if '_id' not in df.columns or 'count' not in df.columns:
                 raise ValueError("Expected columns '_id' or 'count' not found in data.")
 
-            df['subject'] = df['_id']
+            df['subject'] = df['_id'].apply(lambda x: x['subject'])
+            df['type'] = df['_id'].apply(lambda x: x['type'])
             df['count'] = df['count']
             df.drop(columns=['_id'], inplace=True)
 
-            # Configurar o gráfico
-            fig = {
-                'data': [{'x': df['subject'], 'y': df['count'], 'type': 'bar', 'name': 'Total de Ocorrências por Matéria'}],
-                'layout': {
-                    'title': 'Total de Ocorrências por Matéria',
-                    'yaxis': {
-                        'tickformat': 'd',  # Formatar o eixo Y para mostrar apenas inteiros
-                        'dtick': 1          # Define o intervalo entre os ticks do eixo Y
-                    }
-                }
-            }
-            return fig
+            # Pivotar o DataFrame para o formato necessário para o gráfico
+            df_pivot = df.pivot(index='subject', columns='type', values='count').fillna(0)
+            df_pivot.reset_index(inplace=True)
+
+            # Criar o gráfico
+            fig = go.Figure()
+
+            for column in df_pivot.columns[1:]:  # Ignorar a primeira coluna que é 'subject'
+                fig.add_trace(go.Bar(
+                    x=df_pivot['subject'],
+                    y=df_pivot[column],
+                    name=column
+                ))
+
+            fig.update_layout(
+                title='Total de Ocorrências por Matéria e Tipo',
+                title_x=0.5,
+                barmode='stack',  # Para empilhar as barras
+                yaxis=dict(
+                    tickformat='d',  # Formatar o eixo Y para mostrar apenas inteiros
+                    dtick=1          # Define o intervalo entre os ticks do eixo Y
+                ),
+                legend=dict(
+                    orientation='h',  # Define a orientação da legenda horizontal
+                    yanchor='top', # Ancorar a legenda na parte inferior
+                    # y=-0.5,             # Ajusta a posição da legenda para acima do gráfico
+                ),
+                margin=dict(
+                    l=50,  # Margem esquerda
+                    r=50,  # Margem direita
+                    t=100, # Margem superior
+                    b=200  # Margem inferior ajustada para espaço extra para legendas
+                ),
+                height=600
+            )
+
+            return fig.to_dict()  # Retorna o gráfico como um dicionário
         except Exception as e:
-            print(f"Error in get_figure_occurrences_by_subject: {e}")
+            print(f"Error in get_figure_occurrences_by_subject_and_type: {e}")
             return {
                 'data': [],
                 'layout': {
@@ -197,9 +281,12 @@ def create_dash_app(flask_app, mongo):
             }
 
 
-    def get_figure_occurrences_by_teacher():
+    
+
+    
+    def get_figure_occurrences_by_teacher_and_type():
         try:
-            # Consultar e agregar dados do MongoDB para total de ocorrências por professor
+            # Consultar e agregar dados do MongoDB para total de ocorrências por professor e tipo
             pipeline = [
                 {"$match": {"role": "teacher"}},  # Filtra somente os usuários com papel de professor
                 {"$unwind": "$occurrences"},  # Desdobra o array de ocorrências
@@ -210,8 +297,11 @@ def create_dash_app(flask_app, mongo):
                     "as": "occurrence_details"
                 }},
                 {"$unwind": "$occurrence_details"},  # Desdobra os detalhes das ocorrências
-                {"$group": {"_id": "$username", "count": {"$sum": 1}}},  # Conta ocorrências por professor
-                {"$sort": {"_id": 1}}  # Ordena por nome do professor
+                {"$group": {
+                    "_id": {"teacher": "$username", "type": "$occurrence_details.classification"},
+                    "count": {"$sum": 1}
+                }},
+                {"$sort": {"_id.teacher": 1, "_id.type": 1}}  # Ordena por nome do professor e tipo de ocorrência
             ]
             data = list(mongo.db.users.aggregate(pipeline))
 
@@ -233,24 +323,47 @@ def create_dash_app(flask_app, mongo):
             if '_id' not in df.columns or 'count' not in df.columns:
                 raise ValueError("Expected columns '_id' or 'count' not found in data.")
 
-            df['teacher'] = df['_id']
+            df['teacher'] = df['_id'].apply(lambda x: x['teacher'])
+            df['type'] = df['_id'].apply(lambda x: x['type'])
             df['count'] = df['count']
             df.drop(columns=['_id'], inplace=True)
 
             # Configurar o gráfico
-            fig = {
-                'data': [{'x': df['teacher'], 'y': df['count'], 'type': 'bar', 'name': 'Total de Ocorrências por Professor'}],
-                'layout': {
-                    'title': 'Total de Ocorrências por Professor',
-                    'yaxis': {
-                        'tickformat': 'd',  # Formatar o eixo Y para mostrar apenas inteiros
-                        'dtick': 1          # Define o intervalo entre os ticks do eixo Y
-                    }
-                }
-            }
-            return fig
+            fig = go.Figure()
+
+            for occurrence_type in df['type'].unique():
+                filtered_df = df[df['type'] == occurrence_type]
+                fig.add_trace(go.Bar(
+                    x=filtered_df['teacher'],
+                    y=filtered_df['count'],
+                    name=occurrence_type
+                ))
+
+            fig.update_layout(
+                title='Total de Ocorrências por Professor e Tipo',
+                title_x=0.5,
+                barmode='stack',   # Modo de barra empilhada
+                yaxis=dict(
+                    tickformat='d',  # Formatar o eixo Y para mostrar apenas inteiros
+                    dtick=1          # Define o intervalo entre os ticks do eixo Y
+                ),
+                legend=dict(
+                    orientation='h',  # Define a orientação da legenda horizontal
+                    yanchor='top',    # Ancorar a legenda na parte superior
+                    # y=-0.2,            # Ajusta a posição da legenda para baixo do gráfico
+                ),
+                height=600,
+                margin=dict(
+                    l=50,  # Margem esquerda
+                    r=50,  # Margem direita
+                    t=100,  # Margem superior
+                    b=150   # Margem inferior ajustada para espaço extra para legendas
+                ),
+            )
+
+            return fig.to_dict()  # Retorna o gráfico como um dicionário
         except Exception as e:
-            print(f"Error in get_figure_occurrences_by_teacher: {e}")
+            print(f"Error in get_figure_occurrences_by_teacher_and_type: {e}")
             return {
                 'data': [],
                 'layout': {
@@ -262,6 +375,7 @@ def create_dash_app(flask_app, mongo):
                 }
             }
 
+
     def serve_layout():
         return html.Div(
             children=[
@@ -271,19 +385,20 @@ def create_dash_app(flask_app, mongo):
                         html.Div(
                             dcc.Graph(id='graph-occurrences', figure=get_figure_occurrences()),
                             className='card-graph'
-                        ),  # Gráfico de total de ocorrências por tipo
+                        ),
                         html.Div(
-                            dcc.Graph(id='graph-teachers', figure=get_figure_occurrences_by_teacher()),
+                            dcc.Graph(id='graph-occurrences-class-type', figure=get_figure_occurrences_by_class_and_type()),
                             className='card-graph'
-                        ),  # Gráfico de total de ocorrências por professor
+                        ),
                         html.Div(
-                            dcc.Graph(id='graph-classes', figure=get_figure_occurrences_by_class()),
-                            className='card-graph'
-                        ),  # Gráfico de total de ocorrências por turma
+                        dcc.Graph(id='graph-subject-type', figure=get_figure_occurrences_by_subject_and_type()),
+                        className='card-graph'
+                        ),
                         html.Div(
-                            dcc.Graph(id='graph-subjects', figure=get_figure_occurrences_by_subject()),
+                            dcc.Graph(id='graph-teacher-type', figure=get_figure_occurrences_by_teacher_and_type()),
                             className='card-graph'
-                        ),  # Gráfico de total de ocorrências por matéria
+                        ),
+                        
                         dcc.Interval(
                             id='interval-component',
                             interval=60*60*1000,  # milliseconds in 1 hour
@@ -307,38 +422,42 @@ def create_dash_app(flask_app, mongo):
         except Exception as e:
             print(f"Error in update_graph_occurrences: {e}")
             return get_figure_occurrences()  # Returning an empty figure in case of error
+    
+    # Callback do total de ocorrências por turma e tipo
+    @dash_app.callback(
+        Output('graph-occurrences-class-type', 'figure'),
+        Input('interval-component', 'n_intervals')
+    )
+    def update_graph_occurrences_class_type(n):
+        try:
+            return get_figure_occurrences_by_class_and_type()
+        except Exception as e:
+            print(f"Error in update_graph_occurrences_class_type: {e}")
+            return get_figure_occurrences_by_class_and_type()  # Returning an empty figure in case of error
 
+
+    # Callback do total de ocorrências por professor e tipo
     @dash_app.callback(
-        Output('graph-teachers', 'figure'),
+        Output('graph-teacher-type', 'figure'),
         Input('interval-component', 'n_intervals')
     )
-    def update_graph_teachers(n):
+    def update_graph_teacher_type(n):
         try:
-            return get_figure_occurrences_by_teacher()
+            return get_figure_occurrences_by_teacher_and_type()
         except Exception as e:
-            print(f"Error in update_graph_teachers: {e}")
-            return get_figure_occurrences_by_teacher()  # Returning an empty figure in case of error
+            print(f"Error updating teacher-type graph: {e}")
+            return get_figure_occurrences_by_teacher_and_type()
         
     @dash_app.callback(
-    Output('graph-subjects', 'figure'),
+    Output('graph-subject-type', 'figure'),
     Input('interval-component', 'n_intervals')
-)
-    def update_graph_subjects(n):
-        try:
-            return get_figure_occurrences_by_subject()
-        except Exception as e:
-            print(f"Error updating subjects graph: {e}")
-            return get_figure_occurrences_by_subject()
-        
-    @dash_app.callback(
-        Output('graph-classes', 'figure'),
-        Input('interval-component', 'n_intervals')
     )
-    def update_graph_classes(n):
+    def update_graph_subject_type(n):
         try:
-            return get_figure_occurrences_by_class()
+            return get_figure_occurrences_by_subject_and_type()
         except Exception as e:
-            print(f"Error updating classes graph: {e}")
-            return get_figure_occurrences_by_class()
+            print(f"Error updating subject-type graph: {e}")
+            return get_figure_occurrences_by_subject_and_type()
+
 
     return dash_app
