@@ -5,12 +5,15 @@ h2 {
     margin-bottom: 20px;
 }
 
+.flask_messages {
+    padding: 0;
+}
+
 .success {
     color: green;      
     background-color: #d4edda;
     border: 1px solid green;
     padding: 10px;
-    margin-bottom: 10px;
     border-radius: 5px;
     list-style: none;
     text-align: center;
@@ -22,7 +25,6 @@ h2 {
     background-color: #f8d7da;
     border: 1px solid red;
     padding: 10px;
-    margin-bottom: 10px;
     border-radius: 5px;
     list-style: none;
     text-align: center;
@@ -34,7 +36,6 @@ h2 {
     background-color: #d1ecf1;
     border: 1px solid blue;
     padding: 10px;
-    margin-bottom: 10px;
     border-radius: 5px;
     list-style: none;
     text-align: center;
@@ -45,7 +46,6 @@ h2 {
     background-color: #fff3cd;
     border: 1px solid orange;
     padding: 10px;
-    margin-bottom: 10px;
     border-radius: 5px;
     list-style: none;
     text-align: center;

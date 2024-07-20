@@ -158,7 +158,8 @@ Usuário
                     document.getElementById('pageInfo').innerText = `Página ${data.current_page} de ${data.total_pages}`;
                 });
         }
-
+        
+        // Função para gerar PDF
         function generatePDF(occurrence_id, csrf) {
             let url = `/${userRole}/api/generate_pdf`
             fetch(url, {

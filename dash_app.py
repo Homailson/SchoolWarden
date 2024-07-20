@@ -70,17 +70,12 @@ def create_dash_app(flask_app, mongo):
                     tickformat='d',  # Formatar o eixo Y para mostrar apenas inteiros
                     dtick=1          # Define o intervalo entre os ticks do eixo Y
                 ),
-                legend=dict(
-                    orientation='h',  # Define a orientação da legenda horizontal
-                    yanchor='bottom', # Ancorar a legenda na parte inferior
-                    y=1.1             # Ajusta a posição da legenda para acima do gráfico
-                ),
                 height=600,
                 margin=dict(
                     l=50,  # Margem esquerda
                     r=50,  # Margem direita
                     t=100, # Margem superior
-                    b=150  # Margem inferior ajustada para espaço extra para legendas
+                    b=250  # Margem inferior ajustada para espaço extra para legendas
                 ),
             )
 
@@ -153,26 +148,26 @@ def create_dash_app(flask_app, mongo):
                 ))
 
             fig = go.Figure(data=traces)
-            title='Total de Ocorrências por Turma e Tipo'
+            title='Ocorrências por Turma e Tipo'
             fig.update_layout(
                 title='<b>'+title+'</b>',
                 title_x=0.5,
                 barmode='stack',  # Para empilhar as barras
                 yaxis=dict(
                     tickformat='d',  # Formatar o eixo Y para mostrar apenas inteiros
-                    dtick=1          # Define o intervalo entre os ticks do eixo Y
+                    dtick=1,         # Define o intervalo entre os ticks do eixo Y
                 ),
                 legend=dict(
                     orientation='h',  # Define a orientação da legenda horizontal
                     yanchor='top',    # Ancorar a legenda na parte superior
-                    # y=-0.2,         # Ajusta a posição da legenda para baixo do gráfico
+                    y=-0.2            # Ajusta a posição da legenda para baixo do gráfico
                 ),
                 height=600,
                 margin=dict(
                     l=50,  # Margem esquerda
                     r=50,  # Margem direita
                     t=100,  # Margem superior
-                    b=200   # Margem inferior ajustada para espaço extra para legendas
+                    b=250   # Margem inferior ajustada para espaço extra para legendas
                 ),
             )
 
@@ -250,7 +245,7 @@ def create_dash_app(flask_app, mongo):
                     name=column
                 ))
 
-            title='Total de Ocorrências por Matéria e Tipo'
+            title='Ocorrências por Matéria e Tipo'
             fig.update_layout(
                 title='<b>'+title+'</b>',
                 title_x=0.5,
@@ -261,14 +256,14 @@ def create_dash_app(flask_app, mongo):
                 ),
                 legend=dict(
                     orientation='h',  # Define a orientação da legenda horizontal
-                    yanchor='top', # Ancorar a legenda na parte inferior
-                    # y=-0.5,             # Ajusta a posição da legenda para acima do gráfico
+                    yanchor='top',    # Ancorar a legenda na parte inferior
+                    y = -0.2          # Ajusta a posição da legenda para baixo do gráfico
                 ),
                 margin=dict(
                     l=50,  # Margem esquerda
                     r=50,  # Margem direita
                     t=100, # Margem superior
-                    b=200  # Margem inferior ajustada para espaço extra para legendas
+                    b=250  # Margem inferior ajustada para espaço extra para legendas
                 ),
                 height=600
             )
@@ -375,7 +370,7 @@ def create_dash_app(flask_app, mongo):
                     name=occurrence_type
                 ))
 
-            title='Total de Ocorrências por Professor e Tipo'
+            title='Ocorrências por Professor e Tipo'
             fig.update_layout(
                 title='<b>'+title+'</b>',
                 title_x=0.5,
@@ -387,14 +382,14 @@ def create_dash_app(flask_app, mongo):
                 legend=dict(
                     orientation='h',  # Define a orientação da legenda horizontal
                     yanchor='top',    # Ancorar a legenda na parte superior
-                    # y=-0.2,            # Ajusta a posição da legenda para baixo do gráfico
+                    y=-0.2,           # Ajusta a posição da legenda para baixo do gráfico
                 ),
                 height=600,
                 margin=dict(
                     l=50,  # Margem esquerda
                     r=50,  # Margem direita
                     t=100,  # Margem superior
-                    b=150   # Margem inferior ajustada para espaço extra para legendas
+                    b=250   # Margem inferior ajustada para espaço extra para legendas
                 ),
             )
 
