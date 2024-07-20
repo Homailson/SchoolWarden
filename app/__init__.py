@@ -29,6 +29,7 @@ def create_app():
 
     # Initialize CSRF protection
     csrf = CSRFProtect(app)
+    csrf._exempt_views.add('dash.dash.dispatch')
 
     # Importing blueprints
     from .routes.manager import manager_bp
@@ -43,9 +44,13 @@ def create_app():
     app.register_blueprint(teacher_bp, url_prefix='/teacher')
     app.register_blueprint(main_bp)
     app.register_blueprint(admin_bp, url_prefix='/admin')
+    
+    
+    #Integrating dash_app in flask_app
+    from dash_app import create_dash_app
+    create_dash_app(app, mongo=mongo)
 
     # Login route
-
     @app.route('/login', methods=['GET', 'POST'])
     def login():
         if 'role' in session:
@@ -149,6 +154,7 @@ def create_app():
             return redirect(url_for('login'))
         return render_template('common/reset_password.html', form=form)
 
+
     @app.before_request
     def update_session_activity():
         session.modified = True
@@ -157,5 +163,6 @@ def create_app():
     def bad_request_error(error):
         flash('Token de sessão expirado, faça login novamente.', 'error')
         return redirect(url_for('login'))
+    
 
     return app

@@ -32,6 +32,14 @@
             </div>
         </div>
         <div class="card mb-3">
+            <img src="{{ url_for('static', filename='img/graphs.svg') }}" class="card-img-top"
+                alt="Relatórios" style="width: 60px; height: 60px;">
+            <div class="card-body">
+                <h5 class="card-title">Relatórios</h5>
+                <a href="{{ url_for('manager.dashboard_page') }}" class="btn btn-dark btn-block">Ir</a>
+            </div>
+        </div>
+        <div class="card mb-3">
             <img src="{{ url_for('static', filename='img/subjects.svg') }}" class="card-img-top"
                 alt="Cadastrar Disciplina" style="width: 50px; height: 50px;">
             <div class="card-body">

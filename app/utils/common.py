@@ -765,3 +765,11 @@ def generate_pdf_file(buffer, occurrence):
 
     # Construindo o PDF
     doc.build(elements)
+
+
+def dashboard_route():
+    user_role = session.get('role')
+    return render_template('common/dashboard.html', user_role=user_role)
+
+def dashboard():
+    return redirect('/dash/')

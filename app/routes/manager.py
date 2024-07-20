@@ -23,7 +23,9 @@ from app.utils.common import (
     email_form_route,
     changing_email,
     profile_info,
-    generate_pdf
+    generate_pdf,
+    dashboard_route,
+    dashboard
 )
 import bcrypt
 
@@ -352,3 +354,15 @@ def pending_occurrences_count():
 @manager_required
 def generate_pdf_route():
     return generate_pdf()
+
+@manager_bp.route('/dashboard')
+@login_required
+@manager_required
+def dashboard_page():
+    return dashboard_route()
+
+@manager_bp.route('/dashboard/dash', methods=['GET','POST'])
+@login_required
+@manager_required
+def dashboard_dash():
+    return dashboard()

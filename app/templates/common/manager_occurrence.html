@@ -2,11 +2,11 @@
 
 {% block title %}
 {% if user_role == 'teacher' %}
-Ocorrências | Professor
+Ocorrências | Professor(a)
 {% elif user_role == 'manager' %}
-Ocorrências | Gestor
+Ocorrências | Gestor(a)
 {% elif user_role == 'student' %}
-Ocorrências | Aluno
+Ocorrências | Aluno(a)
 {% else %}
 Usuário
 {% endif %}

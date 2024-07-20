@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block title %}
+{% if user_role == 'teacher' %}
+Relatórios | Professor(a)
+{% elif user_role == 'manager' %}
+Relatórios | Gestor(a)
+{% endif %}
+{% endblock %}
+
+
+{% block content %}
+        <h1>Relatórios</h1>
+        <iframe src="/dash/" width="100%" height="2048" frameborder="0"></iframe>
+{% endblock %}
