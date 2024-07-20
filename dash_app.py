@@ -19,9 +19,11 @@ def create_dash_app(flask_app, mongo):
         try:
             # Consultar e agregar dados do MongoDB para total de ocorrências por tipo
             pipeline = [
-                {"$group": {"_id": "$classification", "count": {"$sum": 1}}},
-                {"$sort": {"_id": 1}}  # Ordenar por classificação
+            {"$group": {"_id": "$classification", "count": {"$sum": 1}}},
+            {"$sort": {"count": -1}},  # Ordenar por contagem em ordem decrescente
+            {"$limit": 10}  # Limitar aos 10 primeiros resultados
             ]
+            
             data = list(mongo.db.occurrences.aggregate(pipeline))
 
             if not data:
@@ -60,8 +62,9 @@ def create_dash_app(flask_app, mongo):
             ))
 
             # Personalizar layout do gráfico
+            title = 'Total de Ocorrências por Tipo'
             fig.update_layout(
-                title='Total de Ocorrências por Tipo',
+                title='<b>'+title+'</b>',
                 title_x=0.5,  # Centralizar o título
                 yaxis=dict(
                     tickformat='d',  # Formatar o eixo Y para mostrar apenas inteiros
@@ -99,16 +102,17 @@ def create_dash_app(flask_app, mongo):
         try:
             # Consultar e agregar dados do MongoDB para total de ocorrências por turma e tipo
             pipeline = [
-                {"$unwind": "$occurrences"},  # Desdobra o array de ocorrências
-                {"$lookup": {
-                    "from": "occurrences",
-                    "localField": "occurrences",
-                    "foreignField": "_id",
-                    "as": "occurrence_details"
-                }},
-                {"$unwind": "$occurrence_details"},  # Desdobra os detalhes das ocorrências
-                {"$group": {"_id": {"class": "$classe", "type": "$occurrence_details.classification"}, "count": {"$sum": 1}}},  # Conta ocorrências por turma e tipo
-                {"$sort": {"_id.class": 1, "_id.type": 1}}  # Ordena por turma e tipo
+            {"$unwind": "$occurrences"},  # Desdobra o array de ocorrências
+            {"$lookup": {
+                "from": "occurrences",
+                "localField": "occurrences",
+                "foreignField": "_id",
+                "as": "occurrence_details"
+            }},
+            {"$unwind": "$occurrence_details"},  # Desdobra os detalhes das ocorrências
+            {"$group": {"_id": {"class": "$classe", "type": "$occurrence_details.classification"}, "count": {"$sum": 1}}},  # Conta ocorrências por turma e tipo
+            {"$sort": {"count": -1}},  # Ordena por contagem em ordem decrescente
+            {"$limit": 10}  # Limitar aos 10 primeiros resultados
             ]
             data = list(mongo.db.classes.aggregate(pipeline))
 
@@ -149,8 +153,9 @@ def create_dash_app(flask_app, mongo):
                 ))
 
             fig = go.Figure(data=traces)
+            title='Total de Ocorrências por Turma e Tipo'
             fig.update_layout(
-                title='Total de Ocorrências por Turma e Tipo',
+                title='<b>'+title+'</b>',
                 title_x=0.5,
                 barmode='stack',  # Para empilhar as barras
                 yaxis=dict(
@@ -191,19 +196,20 @@ def create_dash_app(flask_app, mongo):
         try:
             # Consultar e agregar dados do MongoDB para total de ocorrências por matéria e tipo
             pipeline = [
-                {"$unwind": "$occurrences"},  # Desdobra o array de ocorrências
-                {"$lookup": {
-                    "from": "occurrences",
-                    "localField": "occurrences",
-                    "foreignField": "_id",
-                    "as": "occurrence_details"
-                }},
-                {"$unwind": "$occurrence_details"},  # Desdobra os detalhes das ocorrências
-                {"$group": {
-                    "_id": {"subject": "$subject", "type": "$occurrence_details.classification"},
-                    "count": {"$sum": 1}
-                }},
-                {"$sort": {"_id.subject": 1, "_id.type": 1}}  # Ordena por matéria e tipo
+            {"$unwind": "$occurrences"},  # Desdobra o array de ocorrências
+            {"$lookup": {
+                "from": "occurrences",
+                "localField": "occurrences",
+                "foreignField": "_id",
+                "as": "occurrence_details"
+            }},
+            {"$unwind": "$occurrence_details"},  # Desdobra os detalhes das ocorrências
+            {"$group": {
+                "_id": {"subject": "$subject", "type": "$occurrence_details.classification"},
+                "count": {"$sum": 1}
+            }},
+            {"$sort": {"count": -1}},  # Ordena por contagem em ordem decrescente
+            {"$limit": 10}  # Limitar aos 10 primeiros resultados
             ]
             data = list(mongo.db.subjects.aggregate(pipeline))
 
@@ -244,8 +250,9 @@ def create_dash_app(flask_app, mongo):
                     name=column
                 ))
 
+            title='Total de Ocorrências por Matéria e Tipo'
             fig.update_layout(
-                title='Total de Ocorrências por Matéria e Tipo',
+                title='<b>'+title+'</b>',
                 title_x=0.5,
                 barmode='stack',  # Para empilhar as barras
                 yaxis=dict(
@@ -287,22 +294,51 @@ def create_dash_app(flask_app, mongo):
     def get_figure_occurrences_by_teacher_and_type():
         try:
             # Consultar e agregar dados do MongoDB para total de ocorrências por professor e tipo
+            # pipeline = [
+            #     {"$match": {"role": "teacher"}},  # Filtra somente os usuários com papel de professor
+            #     {"$unwind": "$occurrences"},  # Desdobra o array de ocorrências
+            #     {"$lookup": {
+            #         "from": "occurrences",
+            #         "localField": "occurrences",
+            #         "foreignField": "_id",
+            #         "as": "occurrence_details"
+            #     }},
+            #     {"$unwind": "$occurrence_details"},  # Desdobra os detalhes das ocorrências
+            #     {"$group": {
+            #         "_id": {"teacher": "$username", "type": "$occurrence_details.classification"},
+            #         "count": {"$sum": 1}
+            #     }},
+            #     {"$sort": {"_id.teacher": 1, "_id.type": 1}}  # Ordena por nome do professor e tipo de ocorrência
+            # ]
             pipeline = [
-                {"$match": {"role": "teacher"}},  # Filtra somente os usuários com papel de professor
-                {"$unwind": "$occurrences"},  # Desdobra o array de ocorrências
-                {"$lookup": {
-                    "from": "occurrences",
-                    "localField": "occurrences",
-                    "foreignField": "_id",
-                    "as": "occurrence_details"
-                }},
-                {"$unwind": "$occurrence_details"},  # Desdobra os detalhes das ocorrências
-                {"$group": {
-                    "_id": {"teacher": "$username", "type": "$occurrence_details.classification"},
-                    "count": {"$sum": 1}
-                }},
-                {"$sort": {"_id.teacher": 1, "_id.type": 1}}  # Ordena por nome do professor e tipo de ocorrência
-            ]
+            {"$match": {"role": "teacher"}},  # Filtra somente os usuários com papel de professor
+            {"$unwind": "$occurrences"},  # Desdobra o array de ocorrências
+            {"$lookup": {
+                "from": "occurrences",
+                "localField": "occurrences",
+                "foreignField": "_id",
+                "as": "occurrence_details"
+            }},
+            {"$unwind": "$occurrence_details"},  # Desdobra os detalhes das ocorrências
+            {"$group": {
+                "_id": {"teacher": "$username", "type": "$occurrence_details.classification"},
+                "count": {"$sum": 1}
+            }},
+            {"$sort": {"_id.teacher": 1, "count": -1}},  # Ordena por nome do professor e contagem em ordem decrescente
+            {"$group": {
+                "_id": "$_id.teacher",
+                "types": {"$push": {"type": "$_id.type", "count": "$count"}}
+            }},
+            {"$addFields": {
+                "types": {"$slice": ["$types", 10]}  # Limita a 10 tipos mais frequentes por professor
+            }},
+            {"$unwind": "$types"},  # Desdobra o array de tipos
+            {"$group": {
+                "_id": {"teacher": "$_id", "type": "$types.type"},
+                "count": {"$sum": "$types.count"}
+            }},
+            {"$sort": {"_id.teacher": 1, "_id.type": 1}}  # Ordena por nome do professor e tipo de ocorrência
+        ]
             data = list(mongo.db.users.aggregate(pipeline))
 
             if not data:
@@ -339,8 +375,9 @@ def create_dash_app(flask_app, mongo):
                     name=occurrence_type
                 ))
 
+            title='Total de Ocorrências por Professor e Tipo'
             fig.update_layout(
-                title='Total de Ocorrências por Professor e Tipo',
+                title='<b>'+title+'</b>',
                 title_x=0.5,
                 barmode='stack',   # Modo de barra empilhada
                 yaxis=dict(
