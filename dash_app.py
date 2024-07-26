@@ -353,8 +353,14 @@ def create_dash_app(flask_app, mongo):
             df = pd.DataFrame(data)
             if '_id' not in df.columns or 'count' not in df.columns:
                 raise ValueError("Expected columns '_id' or 'count' not found in data.")
+            
+            def abreviar_nomes(nome_completo):
+                nomes = nome_completo.split()
+                if len(nomes) > 2:
+                    return f"{nomes[0]} {' '.join([n[0] + '.' for n in nomes[1:-1]])} {nomes[-1]}"
+                return nome_completo            
 
-            df['teacher'] = df['_id'].apply(lambda x: x['teacher'])
+            df['teacher'] = df['_id'].apply(lambda x: abreviar_nomes(x['teacher']))
             df['type'] = df['_id'].apply(lambda x: x['type'])
             df['count'] = df['count']
             df.drop(columns=['_id'], inplace=True)

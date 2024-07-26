@@ -237,6 +237,8 @@ class OccurrenceForm(FlaskForm):
                  ('Bullying', 'Bullying'),
                  ('CyberBullying', 'CyberBullying'),
                  ('Atraso', 'Atraso'),
+                 ('Brincadeiras inadequadas', 'Brincadeiras inadequadas'),
+                 ('Conversas inadequadas', 'Conversas inadequadas'),
                  ('Recusa em realizar a atividade', 'Recusa em realizar a atividade'),
                  ('Dormindo em sala', 'Dormindo em sala'),
                  ('Agressão física', 'Agressão física'),
