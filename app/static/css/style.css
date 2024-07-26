@@ -1,7 +1,7 @@
 /* Estilos Globais e Gerais */
 h1,
 h2 {
-    margin-top: 10px;
+    margin-top: 20px;
     margin-bottom: 20px;
 }
 
@@ -505,4 +505,8 @@ select {
 
 .profile_info h2 {
     margin-bottom: 2rem;
+}
+
+.students_list_title {
+    text-align: center;
 }

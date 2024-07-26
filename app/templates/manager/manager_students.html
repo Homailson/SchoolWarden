@@ -1,0 +1,195 @@
+{% extends "layout.html" %}
+
+{% block title %}Gerir Estudante{% endblock %}
+
+{% block content %}
+    <ul class="nav nav-tabs">
+        {% for class in classes %}
+        {% if class.classe != "Extraturma" %}
+        <li class="nav-item">
+            <a class="nav-link config-nav-link" data-url="{{ url_for('manager.students_manager', classe_id=class._id) }}" href="#">{{ class.classe }}</a>
+        </li>
+        {% endif %}
+        {% endfor %}
+    </ul>
+
+    <div id="main-content">
+        <!-- Conteúdo da turma carregado dinamicamente será inserido aqui -->
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Editar Estudante</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="student-form">
+                        <meta name="csrf-token" content="{{ csrf_token() }}">
+                        <input type="hidden" id="student-id" name="student-id">
+                        <div class="mb-3">
+                            <label for="student-name" class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="student-name" name="student-name">
+                        </div>
+                        <div class="mb-3">
+                            <label for="student-email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="student-email" name="student-email">
+                        </div>
+                        <div class="mb-3">
+                            <label for="student-class" class="form-label">Turma</label>
+                            <select class="form-select select2" id="student-class" name="student-class">
+                                <!-- As opções serão adicionadas dinamicamente -->
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" id="save-changes">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>    
+
+    <style>
+        .modal {
+            z-index: 1050;
+        }
+        .modal-backdrop {
+            z-index: 1040;
+        }
+        .nav-tabs .nav-link {
+            color: #ccc;
+            background-color: #333;
+            border-color: #444;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: #fff;
+            background-color: #555;
+            border-color: #666;
+        }
+
+        .nav-tabs {
+            border-bottom: 1px solid #444;
+        }
+
+        body.bg-dark {
+            background-color: #222 !important;
+        }
+    </style>
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        function loadContent(url) {
+            $('#main-content').load(url + ' #page-content', function(response, status, xhr) {
+                if (status == "error") {
+                    var msg = "Sorry but there was an error: ";
+                    $("#main-content").html(msg + xhr.status + " " + xhr.statusText);
+                }
+            });
+        }
+
+        // Handle click events for class links
+        $('.config-nav-link').click(function (e) {
+            e.preventDefault();
+            var url = $(this).data('url');
+            $('.config-nav-link').removeClass('active');
+            $(this).addClass('active');
+            localStorage.setItem('activeTab', url);
+            loadContent(url);
+        });
+
+        // Automatically load the first class content on page load or the active tab from localStorage
+        var activeTab = localStorage.getItem('activeTab');
+        var firstClassLink = activeTab ? $('.config-nav-link[data-url="' + activeTab + '"]') : $('.config-nav-link').first();
+        if (firstClassLink.length) {
+            firstClassLink.addClass('active');
+            var firstUrl = firstClassLink.data('url');
+            loadContent(firstUrl);
+        }
+
+        // Populate and show modal with student data
+        $('#exampleModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget); // Button that triggered the modal
+            var studentId = button.data('student-id');
+            var studentName = button.data('student-name');
+            var studentEmail = button.data('student-email');
+            var studentClass = button.data('student-class');
+
+            var modal = $(this);
+            modal.find('#student-id').val(studentId);
+            modal.find('#student-name').val(studentName);
+            modal.find('#student-email').val(studentEmail);
+
+            // Populate the class select box with Select2
+            $.ajax({
+                url: '/manager/get-classes', // Substitua pela sua rota para obter turmas
+                method: 'GET',
+                success: function(response) {
+                    var select = modal.find('#student-class');
+                    select.empty(); // Limpar opções existentes
+
+                    // Adicionar uma opção padrão
+                    select.append($('<option>', { value: '', text: 'Selecione a turma', selected: true }));
+
+                    var currentClassId = studentClass; // ID da turma do estudante a ser selecionado
+
+                    $.each(response.classes, function(index, classe) {
+                        var option = $('<option>', {
+                            value: classe._id,
+                            text: classe.classe
+                        });
+
+                        // Se o ID da turma atual for igual ao ID da turma do estudante, marque como selecionado
+                        if (classe._id === currentClassId) {
+                            option.prop('selected', true);
+                        }
+
+                        select.append(option);
+                    });
+
+                    // Inicialize o Select2 após adicionar as opções
+                    select.select2({
+                        placeholder: "Selecione uma turma",
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error("Erro ao carregar turmas:", error);
+                }
+            });
+        });
+
+        // Handle form submission
+        $('#save-changes').click(function (e) {
+            e.preventDefault();
+
+            // Get the CSRF token from the meta tag or a global variable
+            var csrfToken = $('meta[name="csrf-token"]').attr('content');
+
+            var formData = $('#student-form').serialize();
+            $.ajax({
+                type: 'POST',
+                url: '/manager/update_students',
+                data: formData,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                success: function (response) {
+                    $('#exampleModal').modal('hide');
+                    var activeTabUrl = localStorage.getItem('activeTab');
+                    loadContent(activeTabUrl);
+                },
+                error: function (xhr, status, error) {
+                    alert('An error occurred: ' + error);
+                }
+            });
+        });
+    });
+</script>
+
+{% endblock %}
+{% endblock %}

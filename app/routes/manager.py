@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, session, current_app, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, session, current_app, jsonify, request
 from app.decorators import manager_required, login_required
 from app.forms import ClassForm
 from app.forms import SubjectForm
@@ -347,6 +347,86 @@ def pending_occurrences_count():
         pending_counting = 0
 
     return jsonify({'pending_count': pending_counting})
+
+
+@manager_bp.route('manager/students/<string:classe_id>')
+def students_manager(classe_id):
+    manager_id = session.get('userID')
+    classe = mongo.db.classes.find_one({"_id": ObjectId(classe_id)})
+    if classe_id:
+        students = list(mongo.db.users.find(
+            {
+                "classe": ObjectId(classe_id),
+                "role": "student",
+                "manager_id": manager_id
+            }
+        ))
+        return render_template('manager/student_class.html', students=students, classe=classe)
+    else:
+        return "A Classe não existe"
+    
+@manager_bp.route('/get-classes')
+def get_classes():
+    classes = mongo.db.classes.find({"year": date.today().year})
+    # Converte os documentos em um formato serializável para JSON
+    classes_list = []
+    for c in classes:
+        # Adiciona o campo _id como uma string
+        if c['classe'] != "Extraturma":
+            class_item = {
+                '_id': str(c['_id']),
+                'classe': c['classe'],
+                'year': c['year']
+            }
+            classes_list.append(class_item)
+    # Retorna a resposta JSON
+    return jsonify({'classes': classes_list})
+
+@manager_bp.route('/update_students', methods=['POST'])
+def update_student():
+    # Obtendo dados do formulário
+    student_id = request.form.get('student-id')
+    student_name = request.form.get('student-name')
+    student_email = request.form.get('student-email')
+    student_class = request.form.get('student-class')
+
+    # Verificando se todos os dados necessários foram fornecidos
+    if not student_id or not student_name or not student_email:
+        return jsonify({"error": "Dados insuficientes para atualizar o estudante"}), 400
+
+    # Convertendo o ID do estudante para ObjectId
+    try:
+        student_id = ObjectId(student_id)
+    except Exception as e:
+        return jsonify({"error": "ID do estudante inválido"}), 400
+
+    # Atualizando o estudante no banco de dados
+    result = mongo.db.users.update_one(
+        {"_id": student_id, "role": "student"},
+        {
+            "$set": {
+                "username": student_name,
+                "email": student_email,
+                "classe": ObjectId(student_class)
+            }
+        }
+    )
+
+    if result.matched_count == 0:
+        return jsonify({"error": "Estudante não encontrado"}), 404
+
+    # Retornando uma resposta de sucesso
+    return jsonify({"success": True, "message": "Estudante atualizado com sucesso"}), 200
+
+
+@manager_bp.route('manager_students', methods=['GET','POST'])
+@login_required
+@manager_required
+def manager_students():
+    manager_id = session.get('userID')
+    year=date.today().year
+    classes = list(mongo.db.classes.find({"manager_id":manager_id, "year":year}))
+    return render_template('manager/manager_students.html', classes=classes)
 
 
 @manager_bp.route('/api/generate_pdf', methods=['POST'])
