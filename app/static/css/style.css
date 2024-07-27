@@ -507,6 +507,34 @@ select {
     margin-bottom: 2rem;
 }
 
-.students_list_title {
+.students_list_title, 
+.teachers_list_title {
     text-align: center;
+}
+
+/* Estilo para o modal de atualizar estudantes e atualizar professores */
+.modal {
+    z-index: 1050;
+}
+.modal-backdrop {
+    z-index: 1040;
+}
+.nav-tabs .nav-link {
+    color: #ccc;
+    background-color: #333;
+    border-color: #444;
+}
+
+.nav-tabs .nav-link.active {
+    color: #fff;
+    background-color: #555;
+    border-color: #666;
+}
+
+.nav-tabs {
+    border-bottom: 1px solid #444;
+}
+
+body.bg-dark {
+    background-color: #222 !important;
 }

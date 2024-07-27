@@ -1,0 +1,186 @@
+{% extends "layout.html" %}
+
+{% block title %}Gerir Professores{% endblock %}
+
+{% block content %}
+
+{% from "macros.html" import format_list %}
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Editar Professor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="teacher-form">
+                    <meta name="csrf-token" content="{{ csrf_token() }}">
+                    <input type="hidden" id="teacher-id" name="teacher-id">
+                    <div class="mb-3">
+                        <label for="teacher-name" class="form-label">Nome</label>
+                        <input type="text" class="form-control" id="teacher-name" name="teacher-name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="teacher-email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="teacher-email" name="teacher-email">
+                    </div>
+                    <div class="mb-3">
+                        <label for="teacher-classes" class="form-label">Turmas</label>
+                        <select class="form-select select2" id="teacher-classes" name="teacher-classes" multiple="multiple">
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="teacher-subjects" class="form-label">Disciplinas</label>
+                        <select class="form-select select2" id="teacher-subjects" name="teacher-subjects" multiple="multiple">
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary" id="save-changes">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>    
+
+<h2 class="teachers_list_title">Professores</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th class="text-start">Nome</th>
+            <th class="text-start">Turmas</th>
+            <th class="text-start">Disciplinas</th>
+            <th class="text-end">Ação</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for teacher_info in teachers_info %}
+        <tr>
+            <td>{{ teacher_info.username }}</td>
+            <td>{{ format_list(teacher_info.classes) }}</td>
+            <td>{{ format_list(teacher_info.subjects) }}</td>
+            <td class="text-end">
+                <a href="#"
+                    data-bs-toggle="modal"
+                    data-bs-target="#exampleModal"
+                    data-teacher-id="{{ teacher_info._id }}"
+                    data-teacher-name="{{ teacher_info.username }}" 
+                    data-teacher-email="{{ teacher_info.email }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="black" class="bi bi-pen" viewBox="0 0 16 16">
+                        <path d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a.5.5 0 0 1-.059.702l-9.642 9.642a.5.5 0 0 1-.232.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 1 .702-.059l.148-.149a1.207 1.207 0 1 1 1.708 1.707l-.149.149a1.5 1.5 0 0 1-2.118.057L9.442 1.15a.5.5 0 1 1-.702.707l2.736 2.736a1.5 1.5 0 0 1 .057-2.118z"/>
+                    </svg>
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+            $('#exampleModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var modal = $(this);
+
+                modal.find('#teacher-id').val(button.data('teacher-id'));
+                modal.find('#teacher-name').val(button.data('teacher-name'));
+                modal.find('#teacher-email').val(button.data('teacher-email'));
+                loadCurrentClasses(button.data('teacher-id'));
+                loadCurrentSubjects(button.data('teacher-id'));
+            });
+
+            function loadCurrentClasses(teacherId) {
+                $.getJSON('/manager/get-current-classes/' + teacherId, function (data) {
+                    var classes = data.classes.map(function(item) {
+                        return new Option(item.classe, item._id, false, true);
+                    });
+
+                    $('#teacher-classes').empty().append(classes).val(classes.map(c => c.value)).trigger('change');
+                }).fail(function (xhr, status, error) {
+                    alert('Erro ao carregar turmas atuais: ' + error);
+                });
+            }
+
+            function loadCurrentSubjects(teacherId) {
+                $.getJSON('/manager/get-current-subjects/' + teacherId, function (data) {
+                    var subjects = data.subjects.map(function(item) {
+                        return new Option(item.subject, item._id, false, true);
+                    });
+
+                    $('#teacher-subjects').empty().append(subjects).val(subjects.map(c => c.value)).trigger('change');
+                }).fail(function (xhr, status, error) {
+                    alert('Erro ao carregar disciplinas atuais: ' + error);
+                });
+            }
+
+            $('#teacher-classes').select2({
+                placeholder: 'Selecione as turmas',
+                ajax: {
+                    url: '/manager/get-classes',
+                    dataType: 'json',
+                    delay: 250,
+                    processResults: function (data) {
+                        return {
+                            results: data.classes.map(function(item) {
+                                return {
+                                    id: item._id,
+                                    text: item.classe
+                                };
+                            })
+                        };
+                    },
+                    cache: true
+                }
+            });
+
+
+            $('#teacher-subjects').select2({
+                placeholder: 'Selecione as disciplinas',
+                ajax: {
+                    url: '/manager/get-subjects',
+                    dataType: 'json',
+                    delay: 250,
+                    processResults: function (data) {
+                        return {
+                            results: data.subjects.map(function(item) {
+                                return {
+                                    id: item._id,
+                                    text: item.subject
+                                };
+                            })
+                        };
+                    },
+                    cache: true
+                }
+            });
+
+
+            $('#save-changes').click(function (e) {
+                e.preventDefault();
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/manager/update_teachers',
+                    data: $('#teacher-form').serialize(),
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function () {
+                        $('#exampleModal').modal('hide');
+                        window.location.reload();
+                    },
+                    error: function (xhr, status, error) {
+                        alert('Ocorreu um erro: ' + error);
+                    }
+                });
+            });
+        });
+</script>
+
+{% endblock %}
+{% endblock %}

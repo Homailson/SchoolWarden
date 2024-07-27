@@ -64,6 +64,14 @@
             </div>
         </div>
         <div class="card mb-3">
+            <img src="{{ url_for('static', filename='img/manage_teachers.svg') }}" class="card-img-top"
+                alt="Gerir Professores" style="width: 60px; height: 60px;">
+            <div class="card-body">
+                <h5 class="card-title">Gerir Professores</h5>
+                <a href="{{ url_for('manager.manager_teachers') }}" class="btn btn-dark btn-block">Ir</a>
+            </div>
+        </div>
+        <div class="card mb-3">
             <img src="{{ url_for('static', filename='img/students.svg') }}" class="card-img-top"
                 alt="Cadastrar Estudante" style="width: 60px; height: 60px;">
             <div class="card-body">
@@ -119,4 +127,17 @@
     {% endif %}
 </div>
 
+{% endmacro %}
+
+
+{% macro format_list(lst) %}
+        {% if lst %}
+            {% if lst|length == 1 %}
+                {{ lst[0] }}
+            {% elif lst|length == 2 %}
+                {{ lst[0] }} e {{ lst[1] }}
+            {% else %}
+                {{ lst[:-1]|join(', ') }} e {{ lst[-1] }}
+            {% endif %}
+        {% endif %}
 {% endmacro %}

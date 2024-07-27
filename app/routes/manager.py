@@ -350,6 +350,8 @@ def pending_occurrences_count():
 
 
 @manager_bp.route('manager/students/<string:classe_id>')
+@login_required
+@manager_required
 def students_manager(classe_id):
     manager_id = session.get('userID')
     classe = mongo.db.classes.find_one({"_id": ObjectId(classe_id)})
@@ -361,11 +363,13 @@ def students_manager(classe_id):
                 "manager_id": manager_id
             }
         ))
-        return render_template('manager/student_class.html', students=students, classe=classe)
+        return render_template('manager/students_list.html', students=students, classe=classe)
     else:
         return "A Classe não existe"
     
 @manager_bp.route('/get-classes')
+@login_required
+@manager_required
 def get_classes():
     classes = mongo.db.classes.find({"year": date.today().year})
     # Converte os documentos em um formato serializável para JSON
@@ -382,7 +386,28 @@ def get_classes():
     # Retorna a resposta JSON
     return jsonify({'classes': classes_list})
 
+@manager_bp.route('/get-subjects')
+@login_required
+@manager_required
+def get_subjects():
+    subjects = mongo.db.subjects.find({"year": date.today().year})
+    # Converte os documentos em um formato serializável para JSON
+    subjects_list = []
+    for c in subjects:
+        # Adiciona o campo _id como uma string
+        if c['subject'] != "Extradisciplina":
+            subject_item = {
+                '_id': str(c['_id']),
+                'subject': c['subject'],
+                'year': c['year']
+            }
+            subjects_list.append(subject_item)
+    # Retorna a resposta JSON
+    return jsonify({'subjects': subjects_list})
+
 @manager_bp.route('/update_students', methods=['POST'])
+@login_required
+@manager_required
 def update_student():
     # Obtendo dados do formulário
     student_id = request.form.get('student-id')
@@ -428,6 +453,117 @@ def manager_students():
     classes = list(mongo.db.classes.find({"manager_id":manager_id, "year":year}))
     return render_template('manager/manager_students.html', classes=classes)
 
+def get_teacher_classes_and_subjects(teachers_list):
+    classes_lists, subjects_lists = zip(*[
+        (teacher['classes'], teacher['subjects']) for teacher in teachers_list
+        ])
+    teacher_classes = []
+    teacher_subjects = []
+    year = date.today().year
+    for cls_list in classes_lists:
+        classes = [mongo.db.classes.find_one({"_id":cls, "year":year})['classe'] for cls in cls_list]
+        teacher_classes.append(classes)
+    for sub_list in subjects_lists:
+        subjects = [mongo.db.subjects.find_one({"_id":sub, "year":year})['subject'] for sub in sub_list]
+        teacher_subjects.append(subjects)
+    return teacher_classes, teacher_subjects
+
+
+@manager_bp.route('/get-current-classes/<teacher_id>', methods=['GET'])
+@login_required
+@manager_required
+def get_current_classes(teacher_id):
+    teacher = mongo.db.users.find_one({"_id": ObjectId(teacher_id)})
+    current_classes = mongo.db.classes.find({"_id": {"$in": teacher.get("classes", [])}})
+    classes_list = [{"_id": str(c["_id"]), "classe": c["classe"]} for c in current_classes]
+    return jsonify({"classes": classes_list})
+
+
+@manager_bp.route('/get-current-subjects/<teacher_id>', methods=['GET'])
+@login_required
+@manager_required
+def get_current_subjects(teacher_id):
+    teacher = mongo.db.users.find_one({"_id": ObjectId(teacher_id)})
+    current_subjects = mongo.db.subjects.find({"_id": {"$in": teacher.get("subjects", [])}})
+    subjects_list = [{"_id": str(c["_id"]), "subject": c["subject"]} for c in current_subjects]
+    return jsonify({"subjects": subjects_list})
+
+
+@manager_bp.route('manager_teachers')
+@login_required
+@manager_required
+def manager_teachers():
+    manager_id = session.get('userID')
+    teachers = list(mongo.db.users.find({"manager_id":manager_id, "role":"teacher"}))
+    classes, subjects = get_teacher_classes_and_subjects(teachers)
+    teachers_info = []
+    for teacher, classes, subjects in zip(teachers, classes, subjects):
+        teacher_info = {
+            '_id':teacher['_id'],
+            'username':teacher['username'],
+            'email': teacher['email'],
+            'classes':classes,
+            'subjects':subjects
+        }
+        teachers_info.append(teacher_info)
+    return render_template('manager/manager_teachers.html', teachers_info=teachers_info)
+
+
+# @manager_bp.route('/update_teachers', methods=['POST'])
+# @login_required
+# @manager_required
+# def update_teacher():
+#     teacher_id = request.form.get('teacher-id')
+#     teacher_name = request.form.get('teacher-name')
+#     teacher_email = request.form.get('teacher-email')
+    
+#     if not teacher_id or not teacher_name or not teacher_email:
+#         return jsonify({"error": "Dados insuficientes para atualizar o professor"}), 400
+#     try:
+#         teacher_id = ObjectId(teacher_id)
+#     except Exception as e:
+#         return jsonify({"error": "ID do professor inválido"}), 400
+    
+#     result = mongo.db.users.update_one(
+#         {"_id": teacher_id, "role": "teacher"},
+#         {
+#             "$set": {
+#                 "username": teacher_name,
+#                 "email": teacher_email,
+#             }
+#         }
+#     )
+
+#     if result.matched_count == 0:
+#         return jsonify({"error": "Professor não encontrado"}), 404
+#     return jsonify({"success": True, "message": "Professor atualizado com sucesso"}), 200
+
+@manager_bp.route('/update_teachers', methods=['POST'])
+@login_required
+@manager_required
+def update_teacher():
+    teacher_id = request.form.get('teacher-id')
+    teacher_name = request.form.get('teacher-name')
+    teacher_email = request.form.get('teacher-email')
+    classes = request.form.getlist('teacher-classes')
+    subjects = request.form.getlist('teacher-subjects')
+    
+    result = mongo.db.users.update_one(
+        {"_id": ObjectId(teacher_id), "role": "teacher"},
+        {
+            "$set": {
+                "username": teacher_name,
+                "email": teacher_email,
+                "classes": [ObjectId(cls_id) for cls_id in classes],
+                "subjects": [ObjectId(sub_id) for sub_id in subjects]
+            }
+        }
+    )
+
+    if result.matched_count == 0:
+        return jsonify({"error": "Professor não encontrado"}), 404
+    
+    return jsonify({"success": True, "message": "Professor atualizado com sucesso"}), 200
 
 @manager_bp.route('/api/generate_pdf', methods=['POST'])
 @login_required
