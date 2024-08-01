@@ -3,6 +3,8 @@
 <h1>Bem-vindo(a) professor(a) {{ username }}</h1>
 {% elif role == 'manager' %}
 <h1>Bem-vindo(a) gestor(a) {{ username }}</h1>
+{% elif role == 'monitor' %}
+<h1>Bem-vindo(a) Monitor(a) {{ username }}</h1>
 {% elif role == 'admin' %}
 <h1>Bem-vindo(a) Admin {{ username }}</h1>
 {% else %}
