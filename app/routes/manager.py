@@ -1,9 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, session, current_app, jsonify, request
 from app.decorators import manager_required, login_required
-from app.forms import ClassForm
-from app.forms import SubjectForm
-from app.forms import StudentForm
-from app.forms import TeacherForm
+from app.forms import ClassForm, SubjectForm, StudentForm, TeacherForm, MonitorForm
 from app import mongo
 from datetime import date
 from bson.objectid import ObjectId
@@ -177,6 +174,45 @@ def register_teacher():
             return redirect(url_for('manager.index_route'))
 
     return render_template('manager/register_teacher.html', form=form)
+
+
+@ manager_bp.route('/register_monitor', methods=['GET', 'POST'])
+@login_required
+@ manager_required
+def register_monitor():
+    if 'role' not in session or session['role'] != 'manager':
+        flash('Acesso negado.', 'error')
+        return redirect(url_for('login'))
+
+    form = MonitorForm()
+    manager_id = session.get('userID')
+    user = mongo.db.users.find_one({"_id": ObjectId(manager_id)})
+
+    if form.validate_on_submit():
+        username = form.username.data
+        email = form.email.data
+        confirm_email = form.confirm_email.data
+        password = form.password.data
+
+        if email != confirm_email:
+            flash('Os emails não coincidem!', 'error')
+        else:
+            # Hashing da senha
+            hashed_password = bcrypt.hashpw(
+                password.encode('utf-8'), bcrypt.gensalt())
+
+            mongo.db.users.insert_one({
+                'username': username,
+                'password': hashed_password.decode('utf-8'),
+                'email': email,
+                'role': 'monitor',
+                'manager_id': manager_id,
+                'occurrences': []
+            })
+            flash('Monitor(a) cadastrado com sucesso!', 'success')
+            return redirect(url_for('manager.index_route'))
+
+    return render_template('manager/register_monitor.html', form=form)
 
 
 @ manager_bp.route('/register_student', methods=['GET', 'POST'])

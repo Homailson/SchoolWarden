@@ -72,6 +72,14 @@
             </div>
         </div>
         <div class="card mb-3">
+            <img src="{{ url_for('static', filename='img/monitors.svg') }}" class="card-img-top"
+                alt="Cadastrar Monitor" style="width: 60px; height: 60px;">
+            <div class="card-body">
+                <h5 class="card-title">Cadastrar Monitor</h5>
+                <a href="{{ url_for('manager.register_monitor') }}" class="btn btn-dark btn-block">Ir</a>
+            </div>
+        </div>
+        <div class="card mb-3">
             <img src="{{ url_for('static', filename='img/students.svg') }}" class="card-img-top"
                 alt="Cadastrar Estudante" style="width: 60px; height: 60px;">
             <div class="card-body">
@@ -90,6 +98,23 @@
     </div>
 
     {% elif role == 'teacher' %}
+    <div class="card mb-3">
+        <img src="{{ url_for('static', filename='img/write_occurrence.svg') }}" class="card-img-top"
+            alt="Registrar Ocorrência" style="width: 60px; height: 60px;">
+        <div class="card-body">
+            <h5 class="card-title">Registrar Ocorrência</h5>
+            <a href="{{ url_for(register_endpoint) }}" class="btn btn-dark btn-block">Ir</a>
+        </div>
+    </div>
+    <div class="card mb-3">
+        <img src="{{ url_for('static', filename='img/manage_occurrences.svg') }}" class="card-img-top"
+            alt="Gerir Ocorrências" style="width: 60px; height: 60px;">
+        <div class="card-body">
+            <h5 class="card-title">Gerir Ocorrências</h5>
+            <a href="{{ url_for(manager_endpoint) }}" class="btn btn-dark btn-block">Ir</a>
+        </div>
+    </div>
+    {% elif role == 'monitor' %}
     <div class="card mb-3">
         <img src="{{ url_for('static', filename='img/write_occurrence.svg') }}" class="card-img-top"
             alt="Registrar Ocorrência" style="width: 60px; height: 60px;">

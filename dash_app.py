@@ -282,31 +282,12 @@ def create_dash_app(flask_app, mongo):
                 }
             }
 
-
-    
-
     
     def get_figure_occurrences_by_teacher_and_type():
         try:
-            # Consultar e agregar dados do MongoDB para total de ocorrências por professor e tipo
-            # pipeline = [
-            #     {"$match": {"role": "teacher"}},  # Filtra somente os usuários com papel de professor
-            #     {"$unwind": "$occurrences"},  # Desdobra o array de ocorrências
-            #     {"$lookup": {
-            #         "from": "occurrences",
-            #         "localField": "occurrences",
-            #         "foreignField": "_id",
-            #         "as": "occurrence_details"
-            #     }},
-            #     {"$unwind": "$occurrence_details"},  # Desdobra os detalhes das ocorrências
-            #     {"$group": {
-            #         "_id": {"teacher": "$username", "type": "$occurrence_details.classification"},
-            #         "count": {"$sum": 1}
-            #     }},
-            #     {"$sort": {"_id.teacher": 1, "_id.type": 1}}  # Ordena por nome do professor e tipo de ocorrência
-            # ]
             pipeline = [
-            {"$match": {"role": "teacher"}},  # Filtra somente os usuários com papel de professor
+            # Filtra somente os usuários com papel de professor e monitor
+            {"$match": {"role": {"$in": ["teacher", "monitor"]}}},
             {"$unwind": "$occurrences"},  # Desdobra o array de ocorrências
             {"$lookup": {
                 "from": "occurrences",

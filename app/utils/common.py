@@ -44,14 +44,13 @@ def occurrence_submission(role):
         return redirect(url_for('login'))
 
     form = OccurrenceForm()
-    manager_id = session.get('userID')
 
     teachers = []
     classes = []
     subjects = []
 
     if role == 'manager':
-
+        manager_id = session.get('userID')
         # Buscar dados das coleções
         teachers = list(mongo.db.users.find(
             {'role': 'teacher', 'manager_id': manager_id}))
@@ -59,6 +58,14 @@ def occurrence_submission(role):
             {'_id': ObjectId(manager_id)}
         )
         teachers.append(manager)
+        classes = list(mongo.db.classes.find({'manager_id': manager_id}))
+        subjects = list(mongo.db.subjects.find({'manager_id': manager_id}))
+    
+    elif role == 'monitor':
+        monitor_id = session.get('userID')
+        monitor = mongo.db.users.find_one({"_id":ObjectId(monitor_id)})
+        manager_id = monitor['manager_id']
+        teachers = [monitor]
         classes = list(mongo.db.classes.find({'manager_id': manager_id}))
         subjects = list(mongo.db.subjects.find({'manager_id': manager_id}))
 
@@ -102,14 +109,23 @@ def occurrence_submission(role):
         students = [mongo.db.users.find_one({"_id":ObjectId(id)}) for id in students_ids]
         stdnts_cls_ids = [stds['classe'] for stds in students]
         teacher = mongo.db.users.find_one({"_id":ObjectId(teacher_id)})
-        teacher_cls = teacher['classes']
-        teacher_subs = teacher['subjects']
+        manager_id = teacher['manager_id']
+        manager = mongo.db.users.find_one({"_id":ObjectId(manager_id)})
+        manager_classes = manager['classes']
+        manager_subjects = manager['subjects']
+
+        if teacher['role'] == "monitor":
+            teacher_cls = manager_classes
+            teacher_subs = manager_subjects
+        else:
+            teacher_cls = teacher['classes']
+            teacher_subs = teacher['subjects']
+        
         chosed_cls = mongo.db.classes.find_one({"_id":ObjectId(class_id)})
         chosed_classe = chosed_cls['classe']
         
         if chosed_classe != "Extraturma":
             for id in stdnts_cls_ids:
-                print(id, ObjectId(class_id))
                 if id != ObjectId(class_id):
                     flash('Ocorrência não cadastrada!\
                         Pelo menos um aluno não pertence à turma escolhida.', 'error')
@@ -124,7 +140,7 @@ def occurrence_submission(role):
             flash('Ocorrência não cadastrada!\
                     O professor selecionado não leciona a disciplina escolhida.', 'error')
             return redirect(url_for(f'{role}.register_occurrence'))    
-                
+            
         result = mongo.db.occurrences.insert_one({
             'teacher_id': teacher_id,
             'students_ids': students_ids,
@@ -178,6 +194,15 @@ def search_students():
     search_term = request.args.get('q', '')
     if user['role'] == 'manager':
         manager_id = userID
+        students = list(mongo.db.users.find(
+            {'role': 'student',
+             'username': {'$regex': search_term, '$options': 'i'},
+             'manager_id': manager_id})
+        )
+    elif user['role'] == 'monitor':
+        monitor_id = userID
+        monitor = mongo.db.users.find_one({"_id":ObjectId(monitor_id)})
+        manager_id = monitor['manager_id']
         students = list(mongo.db.users.find(
             {'role': 'student',
              'username': {'$regex': search_term, '$options': 'i'},
@@ -251,6 +276,12 @@ def search_occurrences():
         search_filter['teacher_id'] = userID
         teacher = mongo.db.users.find_one({"_id": ObjectId(userID)})
         search_filter['manager_id'] = teacher['manager_id']
+
+    # Se o usuário for professor (teacher), filtra apenas as ocorrências dele
+    if userRole == 'monitor':
+        search_filter['teacher_id'] = userID
+        monitor = mongo.db.users.find_one({"_id": ObjectId(userID)})
+        search_filter['manager_id'] = monitor['manager_id']
 
     # Se o usuário for estudante (student), filtra apenas as ocorrências dele
     if userRole == 'student':
@@ -686,8 +717,10 @@ def generate_pdf_file(buffer, occurrence):
     user = mongo.db.users.find_one({"_id": ObjectId(occurrence['teacher_id'])})
     if user['role'] == 'manager':
         writer = "Gestor(a) "
-    else:
+    elif user['role'] == 'teacher':
         writer = "Professor(a) "
+    else:
+        writer = "Monitor(a) "
 
     # Conteúdo do corpo
     body_content = [

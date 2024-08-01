@@ -46,6 +46,17 @@ def student_required(view_func):
     return decorated_function
 
 
+def monitor_required(view_func):
+    @wraps(view_func)
+    def decorated_function(*args, **kwargs):
+        if 'role' in session and session['role'] == 'monitor':
+            return view_func(*args, **kwargs)
+        else:
+            flash('Acesso não autorizado', 'error')
+            return redirect(url_for('main.index'))
+    return decorated_function
+
+
 def login_required(view_func):
     @wraps(view_func)
     def decorated_function(*args, **kwargs):

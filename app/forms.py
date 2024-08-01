@@ -173,6 +173,47 @@ class TeacherForm(FlaskForm):
     def update_classes(self, classes):
         self.classes.choices = classes
 
+class MonitorForm(FlaskForm):
+    username = StringField(
+        'Usuário',
+        validators=[
+            DataRequired(),
+            Length(max=64)
+        ]
+    )
+
+    email = EmailField(
+        'E-mail',
+        validators=[
+            DataRequired()
+        ]
+    )
+
+    confirm_email = EmailField(
+        'Confirmar e-mail',
+        validators=[
+            DataRequired(),
+            EqualTo("email",
+                    message="Os emails precisam ser iguais")
+        ]
+    )
+
+    password = PasswordField(
+        'Senha',
+        validators=[
+            DataRequired(),
+            Length(min=8)
+        ]
+    )
+    confirm_password = PasswordField(
+        'Confirmar Senha',
+        validators=[
+            DataRequired(),
+            EqualTo('password',
+                    message='As senhas precisam ser iguais')
+        ]
+    )
+    
 
 class StudentForm(FlaskForm):
     username = StringField(

@@ -35,6 +35,7 @@ def create_app():
     from .routes.manager import manager_bp
     from .routes.student import student_bp
     from .routes.teacher import teacher_bp
+    from .routes.monitor import monitor_bp
     from .routes.main import main_bp
     from .routes.admin import admin_bp
 
@@ -42,6 +43,7 @@ def create_app():
     app.register_blueprint(manager_bp, url_prefix='/manager')
     app.register_blueprint(student_bp, url_prefix='/student')
     app.register_blueprint(teacher_bp, url_prefix='/teacher')
+    app.register_blueprint(monitor_bp, url_prefix='/monitor')
     app.register_blueprint(main_bp)
     app.register_blueprint(admin_bp, url_prefix='/admin')
     
@@ -59,6 +61,8 @@ def create_app():
                 return redirect(url_for('admin.index_route'))
             elif role == 'teacher':
                 return redirect(url_for('teacher.index_route'))
+            elif role == 'monitor':
+                return redirect(url_for('monitor.index_route'))
             elif role == 'student':
                 return redirect(url_for('student.index_route'))
             elif role == 'manager':
@@ -88,6 +92,8 @@ def create_app():
                         return redirect(url_for('admin.index_route'))
                     elif user['role'] == 'teacher':
                         return redirect(url_for('teacher.index_route'))
+                    elif user['role'] == 'monitor':
+                        return redirect(url_for('monitor.index_route'))
                     elif user['role'] == 'student':
                         return redirect(url_for('student.index_route'))
                     elif user['role'] == 'manager':
@@ -117,7 +123,6 @@ def create_app():
     @app.route('/reset_password_request', methods=['GET', 'POST'])
     def reset_password_request():
         form = ResetPasswordRequestForm()
-        print("iniciando função")
         if form.validate_on_submit():
             email = form.email.data
             user = mongo.db.users.find_one({"email": email})

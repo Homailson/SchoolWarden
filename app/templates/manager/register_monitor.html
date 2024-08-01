@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+
+{% block title %}Cadastro de Monitor{% endblock %}
+
+{% block content %}
+<h2 class="text-center mb-2 mt-4">Cadastro de Monitor</h2>
+<form class="monitor_form" method="POST" action="{{ url_for('manager.register_monitor') }}">
+    {{ form.hidden_tag() }}
+    <div class="form-group row mb-3">
+        <label for="username" class="col-sm-2 col-form-label">Usuário</label>
+        <div class="col-sm-10">
+            {{ form.username(size=32, class="form-control", id="username") }}
+            {% for error in form.username.errors %}
+            <span style="color: red;">{{ error }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="form-group row mb-3">
+        <label for="email" class="col-sm-2 col-form-label">E-mail</label>
+        <div class="col-sm-10">
+            {{ form.email(size=32, class="form-control", id="email") }}
+            {% for error in form.email.errors %}
+            <span style="color: red;">{{ error }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="form-group row mb-3">
+        <label for="confirm_email" class="col-sm-2 col-form-label">Confirmar e-mail</label>
+        <div class="col-sm-10">
+            {{ form.confirm_email(size=32, class="form-control", id="confirm_email") }}
+            {% for error in form.confirm_email.errors %}
+            <span style="color: red;">{{ error }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="form-group row mb-3">
+        <label for="password" class="col-sm-2 col-form-label">Senha</label>
+        <div class="col-sm-10">
+            {{ form.password(size=32, class="form-control", id="password") }}
+            {% for error in form.password.errors %}
+            <span style="color: red;">{{ error }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="form-group row mb-3">
+        <label for="confirm_password" class="col-sm-2 col-form-label">Confirmar senha</label>
+        <div class="col-sm-10">
+            {{ form.confirm_password(size=32, class="form-control", id="confirm_password") }}
+            {% for error in form.confirm_password.errors %}
+            <span style="color: red;">{{ error }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    <button class="w-100 btn btn-dark mt-3" type="submit">Cadastrar</button>
+</form>
+<script src="{{ url_for('static', filename='js/select2_custom.js') }}"></script>
+{% endblock %}
