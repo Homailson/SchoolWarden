@@ -280,6 +280,8 @@ class OccurrenceForm(FlaskForm):
                  ('Atraso', 'Atraso'),
                  ('Brincadeiras inadequadas', 'Brincadeiras inadequadas'),
                  ('Conversas inadequadas', 'Conversas inadequadas'),
+                 ('Não fez tarefa', 'Não fez tarefa'),
+                 ('Não fez trabalho', 'Não fez trabalho'),
                  ('Recusa em realizar a atividade', 'Recusa em realizar a atividade'),
                  ('Dormindo em sala', 'Dormindo em sala'),
                  ('Agressão física', 'Agressão física'),

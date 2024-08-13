@@ -21,6 +21,7 @@ from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 from io import BytesIO
 import requests
 import bcrypt
+import re
 
 
 def index():
@@ -35,7 +36,10 @@ def index():
 
 
 def sanitize_description(description):
-    return description.strip().replace("'", "").replace('"', '')
+    description = re.sub(r'\s+', ' ', description)
+    description = description.replace("'", "").replace('"', '')
+    description = description.strip()
+    return description
 
 
 def occurrence_submission(role):
