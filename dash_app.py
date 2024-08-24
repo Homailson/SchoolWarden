@@ -350,7 +350,7 @@ def create_dash_app(flask_app, mongo):
                     }},
                     
                     {"$sort": {"totalOccurrences": -1}},
-                    {"$limit": 5},
+                    {"$limit": 10},
 
                     {"$unwind": "$types"},
                     
@@ -364,7 +364,7 @@ def create_dash_app(flask_app, mongo):
                     
 
                     {"$sort": {
-                        "totalOccurrences": 1,
+                        "totalOcurrences": 1,
                     }}
                 ]
 
@@ -398,8 +398,6 @@ def create_dash_app(flask_app, mongo):
             df['type'] = df['_id'].apply(lambda x: x['type'])
             df['count'] = df['count']
             df.drop(columns=['_id'], inplace=True)
-
-            print(df)
 
             # Configurar o gráfico
             fig = go.Figure()
