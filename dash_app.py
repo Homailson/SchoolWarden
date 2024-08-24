@@ -257,7 +257,7 @@ def create_dash_app(flask_app, mongo):
                 legend=dict(
                     orientation='h',  # Define a orientação da legenda horizontal
                     yanchor='top',    # Ancorar a legenda na parte inferior
-                    y = -0.2          # Ajusta a posição da legenda para baixo do gráfico
+                    y = -0.3          # Ajusta a posição da legenda para baixo do gráfico
                 ),
                 margin=dict(
                     l=50,  # Margem esquerda
@@ -285,36 +285,89 @@ def create_dash_app(flask_app, mongo):
     
     def get_figure_occurrences_by_teacher_and_type():
         try:
+        #     pipeline = [
+        #     Filtra somente os usuários com papel de professor e monitor
+        #     {"$match": {"role": {"$in": ["teacher", "monitor"]}}},
+        #     {"$unwind": "$occurrences"},  # Desdobra o array de ocorrências
+        #     {"$lookup": {
+        #         "from": "occurrences",
+        #         "localField": "occurrences",
+        #         "foreignField": "_id",
+        #         "as": "occurrence_details"
+        #     }},
+        #     {"$unwind": "$occurrence_details"},  # Desdobra os detalhes das ocorrências
+        #     {"$group": {
+        #         "_id": {"teacher": "$username", "type": "$occurrence_details.classification"},
+        #         "count": {"$sum": 1}
+        #     }},
+        #     {"$sort": {"_id.teacher": 1, "count": -1}},  # Ordena por nome do professor e contagem em ordem decrescente
+        #     {"$group": {
+        #         "_id": "$_id.teacher",
+        #         "types": {"$push": {"type": "$_id.type", "count": "$count"}}
+        #     }},
+        #     {"$addFields": {
+        #         "types": {"$slice": ["$types", 10]}  # Limita a 10 tipos mais frequentes por professor
+        #     }},
+        #     {"$unwind": "$types"},  # Desdobra o array de tipos
+        #     {"$group": {
+        #         "_id": {"teacher": "$_id", "type": "$types.type"},
+        #         "count": {"$sum": "$types.count"}
+        #     }},
+        #     {"$sort": {"_id.teacher": 1, "_id.type": 1}}  # Ordena por nome do professor e tipo de ocorrência
+        # ]
+
             pipeline = [
-            # Filtra somente os usuários com papel de professor e monitor
-            {"$match": {"role": {"$in": ["teacher", "monitor"]}}},
-            {"$unwind": "$occurrences"},  # Desdobra o array de ocorrências
-            {"$lookup": {
-                "from": "occurrences",
-                "localField": "occurrences",
-                "foreignField": "_id",
-                "as": "occurrence_details"
-            }},
-            {"$unwind": "$occurrence_details"},  # Desdobra os detalhes das ocorrências
-            {"$group": {
-                "_id": {"teacher": "$username", "type": "$occurrence_details.classification"},
-                "count": {"$sum": 1}
-            }},
-            {"$sort": {"_id.teacher": 1, "count": -1}},  # Ordena por nome do professor e contagem em ordem decrescente
-            {"$group": {
-                "_id": "$_id.teacher",
-                "types": {"$push": {"type": "$_id.type", "count": "$count"}}
-            }},
-            {"$addFields": {
-                "types": {"$slice": ["$types", 10]}  # Limita a 10 tipos mais frequentes por professor
-            }},
-            {"$unwind": "$types"},  # Desdobra o array de tipos
-            {"$group": {
-                "_id": {"teacher": "$_id", "type": "$types.type"},
-                "count": {"$sum": "$types.count"}
-            }},
-            {"$sort": {"_id.teacher": 1, "_id.type": 1}}  # Ordena por nome do professor e tipo de ocorrência
-        ]
+                    {"$match": {"role": {"$in": ["teacher", "monitor"]}}},
+
+                    {"$unwind": "$occurrences"},
+
+                    {"$lookup": {
+                        "from": "occurrences",
+                        "localField": "occurrences",
+                        "foreignField": "_id",
+                        "as": "occurrence_details"
+                    }},
+                    
+                    {"$unwind": "$occurrence_details"},
+
+                    {"$group": {
+                        "_id": {
+                            "teacher": "$username",
+                            "type": "$occurrence_details.classification"
+                        },
+                        "count": {"$sum": 1}
+                    }},
+                    
+                    {"$group": {
+                        "_id": "$_id.teacher",
+                        "totalOccurrences": {"$sum": "$count"},
+                        "types": {
+                            "$push": {
+                                "type": "$_id.type",
+                                "count": "$count"
+                            }
+                        }
+                    }},
+                    
+                    {"$sort": {"totalOccurrences": -1}},
+                    {"$limit": 5},
+
+                    {"$unwind": "$types"},
+                    
+                    {"$group": {
+                        "_id": {
+                            "teacher": "$_id",
+                            "type": "$types.type"
+                        },
+                        "count": {"$sum": "$types.count"}
+                    }},
+                    
+
+                    {"$sort": {
+                        "totalOccurrences": 1,
+                    }}
+                ]
+
             data = list(mongo.db.users.aggregate(pipeline))
 
             if not data:
@@ -346,6 +399,8 @@ def create_dash_app(flask_app, mongo):
             df['count'] = df['count']
             df.drop(columns=['_id'], inplace=True)
 
+            print(df)
+
             # Configurar o gráfico
             fig = go.Figure()
 
@@ -369,7 +424,7 @@ def create_dash_app(flask_app, mongo):
                 legend=dict(
                     orientation='h',  # Define a orientação da legenda horizontal
                     yanchor='top',    # Ancorar a legenda na parte superior
-                    y=-0.2,           # Ajusta a posição da legenda para baixo do gráfico
+                    y=-0.3,           # Ajusta a posição da legenda para baixo do gráfico
                 ),
                 height=600,
                 margin=dict(
