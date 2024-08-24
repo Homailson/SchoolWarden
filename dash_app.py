@@ -203,7 +203,6 @@ def create_dash_app(flask_app, mongo):
                 "count": {"$sum": 1}
             }},
             {"$sort": {"count": -1}},  # Ordena por contagem em ordem decrescente
-            {"$limit": 10}  # Limitar aos 10 primeiros resultados
             ]
             data = list(mongo.db.subjects.aggregate(pipeline))
 
