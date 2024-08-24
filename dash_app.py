@@ -107,7 +107,6 @@ def create_dash_app(flask_app, mongo):
             {"$unwind": "$occurrence_details"},  # Desdobra os detalhes das ocorrências
             {"$group": {"_id": {"class": "$classe", "type": "$occurrence_details.classification"}, "count": {"$sum": 1}}},  # Conta ocorrências por turma e tipo
             {"$sort": {"count": -1}},  # Ordena por contagem em ordem decrescente
-            {"$limit": 10}  # Limitar aos 10 primeiros resultados
             ]
             data = list(mongo.db.classes.aggregate(pipeline))
 
