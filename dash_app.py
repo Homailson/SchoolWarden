@@ -332,7 +332,8 @@ def create_dash_app(flask_app, mongo):
                     }},
                     
                     {"$sort": {
-                        "totalOcurrences": 1,
+                        "_id.teacher": 1,
+                        "_id.type": 1
                     }}
                 ]
 
