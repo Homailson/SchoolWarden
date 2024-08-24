@@ -422,7 +422,7 @@ def create_dash_app(flask_app, mongo):
                 legend=dict(
                     orientation='h',  # Define a orientação da legenda horizontal
                     yanchor='top',    # Ancorar a legenda na parte superior
-                    y=-0.3,           # Ajusta a posição da legenda para baixo do gráfico
+                    y=-0.5,           # Ajusta a posição da legenda para baixo do gráfico
                 ),
                 height=600,
                 margin=dict(
