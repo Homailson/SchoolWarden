@@ -96,18 +96,86 @@ def create_dash_app(flask_app, mongo):
     def get_figure_occurrences_by_class_and_type():
         try:
             # Consultar e agregar dados do MongoDB para total de ocorrências por turma e tipo
+            # pipeline = [
+            # {"$unwind": "$occurrences"},  # Desdobra o array de ocorrências
+            # {"$lookup": {
+            #     "from": "occurrences",
+            #     "localField": "occurrences",
+            #     "foreignField": "_id",
+            #     "as": "occurrence_details"
+            # }},
+            # {"$unwind": "$occurrence_details"},  # Desdobra os detalhes das ocorrências
+            # {"$group": {"_id": {"class": "$classe", "type": "$occurrence_details.classification"}, "count": {"$sum": 1}}},  # Conta ocorrências por turma e tipo
+            # {"$sort": {"count": -1}},  # Ordena por contagem em ordem decrescente
+            # ]
+
             pipeline = [
-            {"$unwind": "$occurrences"},  # Desdobra o array de ocorrências
-            {"$lookup": {
-                "from": "occurrences",
-                "localField": "occurrences",
-                "foreignField": "_id",
-                "as": "occurrence_details"
-            }},
-            {"$unwind": "$occurrence_details"},  # Desdobra os detalhes das ocorrências
-            {"$group": {"_id": {"class": "$classe", "type": "$occurrence_details.classification"}, "count": {"$sum": 1}}},  # Conta ocorrências por turma e tipo
-            {"$sort": {"count": -1}},  # Ordena por contagem em ordem decrescente
+                {
+                    '$unwind': {
+                        'path': '$occurrences'
+                    }
+                }, {
+                    '$lookup': {
+                        'from': 'occurrences', 
+                        'localField': 'occurrences', 
+                        'foreignField': '_id', 
+                        'as': 'occurrence_details'
+                    }
+                }, {
+                    '$unwind': {
+                        'path': '$occurrence_details'
+                    }
+                }, {
+                    '$group': {
+                        '_id': {
+                            'class': '$classe', 
+                            'type': '$occurrence_details.classification'
+                        }, 
+                        'count': {
+                            '$sum': 1
+                        }
+                    }
+                }, {
+                    '$group': {
+                        '_id': '$_id.class', 
+                        'totalOccurrences': {
+                            '$sum': '$count'
+                        }, 
+                        'types': {
+                            '$push': {
+                                'type': '$_id.type', 
+                                'count': '$count'
+                            }
+                        }
+                    }
+                }, {
+                    '$sort': {
+                        'totalOccurrences': -1
+                    }
+                }, {
+                    '$limit': 5
+                }, {
+                    '$unwind': {
+                        'path': '$types'
+                    }
+                }, {
+                    '$group': {
+                        '_id': {
+                            'class': '$_id', 
+                            'type': '$types.type'
+                        }, 
+                        'count': {
+                            '$sum': '$types.count'
+                        }
+                    }
+                }, {
+                    '$sort': {
+                        '_id.class': 1, 
+                        '_id.type': 1
+                    }
+                }
             ]
+
             data = list(mongo.db.classes.aggregate(pipeline))
 
             if not data:
