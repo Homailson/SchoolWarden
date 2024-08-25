@@ -95,20 +95,6 @@ def create_dash_app(flask_app, mongo):
         
     def get_figure_occurrences_by_class_and_type():
         try:
-            # Consultar e agregar dados do MongoDB para total de ocorrências por turma e tipo
-            # pipeline = [
-            # {"$unwind": "$occurrences"},  # Desdobra o array de ocorrências
-            # {"$lookup": {
-            #     "from": "occurrences",
-            #     "localField": "occurrences",
-            #     "foreignField": "_id",
-            #     "as": "occurrence_details"
-            # }},
-            # {"$unwind": "$occurrence_details"},  # Desdobra os detalhes das ocorrências
-            # {"$group": {"_id": {"class": "$classe", "type": "$occurrence_details.classification"}, "count": {"$sum": 1}}},  # Conta ocorrências por turma e tipo
-            # {"$sort": {"count": -1}},  # Ordena por contagem em ordem decrescente
-            # ]
-
             pipeline = [
                 {
                     '$unwind': {
@@ -153,7 +139,7 @@ def create_dash_app(flask_app, mongo):
                         'totalOccurrences': -1
                     }
                 }, {
-                    '$limit': 5
+                    '$limit': 10
                 }, {
                     '$unwind': {
                         'path': '$types'
